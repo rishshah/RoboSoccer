@@ -24,7 +24,7 @@ Teaching elementary skills to robots using motion clips and Reinforcement Learni
 #### Part3
 - Figure out the reward functions for goal oriented tasks
 
-### Decoding the paper
+## Decoding the paper
 
 #### States
 - Relative position of all links, their orientation in quaternions, linear and angular velocities.
@@ -60,3 +60,15 @@ Start in all possible states in the clip rather than at the start as there is a 
 
 #### Early termination
 If body torso  or head or some other links hit the ground then terminate the learning as it is wasted in getting up from those positions
+
+
+
+### Discussion
+- Nao model created (check if correct)
+	-- Some Joints have been assumed not sure what to do ? SHIVARAM
+	-- Which joint in effector maps to which joint in model is difficult ? PARAG 
+	-- We would need that ?
+- What to do with those rsg files? SHIVARAM
+- Constrained nao cannot be retargetted to , so cannot test the files via skills ? BOTH
+- Simulator working 
+- In process of understanding A3C

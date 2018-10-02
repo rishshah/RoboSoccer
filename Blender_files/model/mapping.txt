@@ -1,0 +1,31 @@
+Hips			Torso		
+LHipJoint		LeftHip1	LeftHip2
+LeftUpLeg		LeftHip3		
+LeftLeg			LeftSkank		
+LeftFoot		LeftAnkle	LeftFoot	
+LeftToeBase			
+RHipJoint		RightHip1	RightHip2
+RightUpLeg		RightHip3		
+RightLeg		RightSkank		
+RightFoot		RightAnkle	RightFoot	
+RightToeBase			
+LowerBack			
+Spine			
+Spine1			
+Neck			
+Neck1			Neck		
+Head			Head		
+LeftShoulder			
+LeftArm			LeftShoulder	LeftUpperarm	
+LeftForeArm		LeftElbow	LeftLowerarm	
+LeftHand			
+LeftFingerBase			
+LeftHandIndex1			
+LThumb			
+RightShoulder			
+RightArm		RightShoulder	RightUpperarm	
+RightForeArm	RightElbow	RightLowerarm	
+RightHand			
+RightFingerBase			
+RightHandIndex1			
+RThumb			

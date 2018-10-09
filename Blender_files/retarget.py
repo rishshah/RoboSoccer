@@ -1,6 +1,6 @@
 from bvh import Bvh
 
-with open('Retargetting/walk_smooth.bvh') as f:
+with open('Retargetting/walk_in_place.bvh') as f:
 	mocap = Bvh(f.read())
 
 with open('model/constraints_updated.txt') as f:

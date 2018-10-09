@@ -8,6 +8,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../environment')
 
+import time
 import torch
 import torch.nn as nn
 from utils import v_wrap, set_init, push_and_pull, record
@@ -47,7 +48,7 @@ class Net(nn.Module):
 
     def forward(self, x):
         a1 = F.relu(self.a1(x))
-        mu = 2 * F.tanh(self.mu(a1))
+        mu = 2 * torch.tanh(self.mu(a1))
         sigma = F.softplus(self.sigma(a1)) + 0.001      # avoid 0
         c1 = F.relu(self.c1(x))
         values = self.v(c1)
@@ -57,7 +58,7 @@ class Net(nn.Module):
         self.training = False
         mu, sigma, _ = self.forward(s)
         # m = self.distribution(mu.view(1, ).data, sigma.view(1, ).data)
-        m = self.distribution(mu.view(self.s_dim, ).data, sigma.view(self.s_dim, ).data)
+        m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         return m.sample().numpy()
 
     def loss_func(self, s, a, v_t):
@@ -87,7 +88,6 @@ class Worker(mp.Process):
     def run(self):
         total_step = 1
         while self.g_ep.value < MAX_EP:
-            print(total_step)
             s = self.env.reset()
             buffer_s, buffer_a, buffer_r = [], [], []
             ep_r = 0.
@@ -102,9 +102,10 @@ class Worker(mp.Process):
                 if t == MAX_EP_STEP - 1:
                     done = True
                 ep_r += r
-                buffer_a.append(a)
                 buffer_s.append(s)
-                buffer_r.append((r+8.1)/8.1)    # normalize
+                buffer_a.append(a)
+                buffer_r.append(r)    # normalize
+                # buffer_r.append((r+8.1)/8.1)    # normalize
 
                 if total_step % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
                     # sync
@@ -116,7 +117,7 @@ class Worker(mp.Process):
                         break
                 s = s_
                 total_step += 1
-                print(total_step)
+                time.sleep(0.02)
 
         self.res_queue.put(None)
 

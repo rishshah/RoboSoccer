@@ -1,0 +1,111 @@
+HIERARCHY
+ROOT Torso
+{
+	OFFSET 0 0 0
+	CHANNELS 6 Xposition Yposition Zposition Zrotation Yrotation Xrotation
+	JOINT LHip
+	{	
+		OFFSET 0.01 -0.06 0
+		CHANNELS 3 Zrotation Yrotation Xrotation
+		JOINT LFakeHip
+		{
+			OFFSET 0 -0.054 0.055
+			CHANNELS 3 Zrotation Yrotation Xrotation			
+			JOINT LeftThigh
+			{
+				OFFSET 0 -0.001 0
+				CHANNELS 3 Zrotation Yrotation Xrotation
+				JOINT LeftLeg
+				{
+					OFFSET -0.015 -0.120 0
+					CHANNELS 3 Zrotation Yrotation Xrotation
+					JOINT LeftFoot
+					{
+						OFFSET 0.01 -0.1 0
+						CHANNELS 3 Zrotation Yrotation Xrotation
+						End Site
+						{
+							OFFSET -0.090 -0.035 0
+						}
+					}
+				}
+			}
+		}
+	}
+	JOINT RHip
+	{	
+		OFFSET 0.01 -0.06 0
+		CHANNELS 3 Zrotation Yrotation Xrotation
+		JOINT RFakeHip
+		{
+			OFFSET 0 -0.054 -0.055
+			CHANNELS 3 Zrotation Yrotation Xrotation			
+			JOINT RightThigh
+			{
+				OFFSET 0 -0.001 0
+				CHANNELS 3 Zrotation Yrotation Xrotation
+				JOINT RightLeg
+				{
+					OFFSET -0.015 -0.120 0
+					CHANNELS 3 Zrotation Yrotation Xrotation
+					JOINT RightFoot
+					{
+						OFFSET 0.01 -0.1 0
+						CHANNELS 3 Zrotation Yrotation Xrotation
+						End Site
+						{
+							OFFSET -0.090 -0.035 0
+						}
+					}
+				}
+			}
+		}
+	}
+	JOINT Neck
+	{
+		OFFSET 0 0.04 0
+		CHANNELS 3 Zrotation Yrotation Xrotation
+		JOINT Head
+		{
+			OFFSET 0 0.1 0
+			CHANNELS 3 Zrotation Yrotation Xrotation
+			End Site 
+			{
+				OFFSET 0 0.07 0
+			}
+		}
+	}
+	JOINT LeftUpperarm
+	{
+		OFFSET 0 0.075 0.098
+		CHANNELS 3 Zrotation Yrotation Xrotation
+		JOINT LeftLowerarm
+		{
+			OFFSET -0.09 0.009 0
+			CHANNELS 3 Zrotation Yrotation Xrotation
+			End	Site
+			{
+				OFFSET -0.105 0 0
+			}
+		}
+	}
+	JOINT RightUpperarm
+	{
+		OFFSET 0 0.075 -0.098
+		CHANNELS 3 Zrotation Yrotation Xrotation
+		JOINT RightLowerarm
+		{
+			OFFSET -0.09 0.009 0
+			CHANNELS 3 Zrotation Yrotation Xrotation
+			End	Site
+			{
+				OFFSET -0.105 0 0
+			}
+		}
+	}
+}
+
+MOTION
+Frames: 1
+Frame Time: .0083333
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  	

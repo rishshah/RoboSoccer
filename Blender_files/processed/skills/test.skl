@@ -1,0 +1,173 @@
+STARTSKILL SKILL_TEST
+
+STARTSTATE
+settar  EFF_LL3 9.9 EFF_LL4 -24.7 EFF_LL5 3.5 EFF_LL6 -9.8 EFF_RL2 10.3 EFF_RL3 14.9 EFF_RL4 -35.3 EFF_RL6 3.2 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL4 3.6 EFF_RL5 -4.2 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 -3.3 EFF_RL5 -3.6 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 -4.1 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 3.1 EFF_LL4 -5.7 EFF_LL5 3.8 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 4.0 EFF_LL4 -7.0 EFF_LL5 6.1 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 4.5 EFF_LL4 -7.4 EFF_LL5 6.3 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 4.4 EFF_LL4 -7.4 EFF_LL5 4.8 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 3.9 EFF_LL4 -6.8 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 3.4 EFF_LL4 -6.2 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 -5.5 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 -4.7 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 -3.6 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 -3.5 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL2 3.1 EFF_LL3 -3.5 EFF_LL4 6.6 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 5.0 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 -3.0 EFF_LL4 6.2 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 -3.7 EFF_LL4 7.5 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 -4.1 EFF_LL4 8.2 EFF_LL5 -3.0 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 -4.1 EFF_LL4 7.8 EFF_LL5 -3.4 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 -3.8 EFF_LL4 6.9 EFF_LL5 -3.9 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL3 -3.3 EFF_LL4 5.8 EFF_LL5 -4.8 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 4.8 EFF_LL5 -3.9 EFF_RL4 -3.1 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 3.8 EFF_RL4 -4.0 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 3.3 EFF_RL4 -4.7 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL3 3.6 EFF_RL4 -5.2 EFF_RL5 4.4 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL3 4.2 EFF_RL4 -6.0 EFF_RL5 5.0 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL3 4.5 EFF_RL4 -6.5 EFF_RL5 3.2 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL3 4.2 EFF_RL4 -6.5 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL3 3.8 EFF_RL4 -6.5 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_RL3 3.4 EFF_RL4 -6.3 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 3.3 EFF_RL4 -5.7 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 3.2 EFF_RL4 -4.7 end 
+wait 0.0 end
+ENDSTATE
+
+STARTSTATE
+inctar  EFF_LL4 6.3 EFF_LL5 3.0 EFF_RL4 -3.0 end 
+wait 0.0 end
+ENDSTATE
+
+ENDSKILL

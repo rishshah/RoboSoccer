@@ -1,0 +1,120 @@
+{	"Torso": {},
+	"LHip1": {
+		"Yrotation": {
+			"lhipjoint": {
+				"Xrotation": 0,
+				"Yrotation": 0,
+				"Zrotation": 0
+			}
+		}
+	},
+	"LHip2": {
+		"custom": {
+			"Xrotation": 0,
+			"Yrotation": "lhipjoint",
+			"Zrotation": 0			
+		}
+	},
+	"LHip3": {
+		"custom": {
+			"Xrotation": "lfemur",
+			"Yrotation": 0,
+			"Zrotation": 0
+		}
+	},
+	"LThigh": {	
+	},
+	"LLeg": {
+		"Xrotation": {
+			"ltibia": {
+				"Xrotation": -1,
+				"Yrotation": 0,
+				"Zrotation": 0
+			}
+		}	
+	},
+	"LFoot": {
+		"Xrotation": {
+			"lfoot": {
+				"Xrotation": 1,
+				"Yrotation": 0,
+				"Zrotation": 0
+			}
+		},
+		"Yrotation": {
+			"lfoot": {
+				"Xrotation": 0,
+				"Yrotation": 1,
+				"Zrotation": 0
+			}
+		}	
+	},
+	"RHip1": {
+		"Yrotation": {
+			"rhipjoint": {
+				"Xrotation": 0,
+				"Yrotation": 0,
+				"Zrotation": 0
+			}
+		}
+	},
+	"RHip2": {
+		"custom": {
+			"Xrotation": 0,
+			"Yrotation": "rhipjoint",
+			"Zrotation": 0			
+		}
+	},
+	"RHip3": {
+		"custom": {
+			"Xrotation": "rfemur",
+			"Yrotation": 0,
+			"Zrotation": 0			
+		}
+	},
+	"RThigh": {	
+	},
+	"RLeg": {
+		"Xrotation": {
+			"rtibia": {
+				"Xrotation": -1,
+				"Yrotation": 0,
+				"Zrotation": 0
+			}
+		}	
+	},
+	"RFoot": {
+		"Xrotation": {
+			"rfoot": {
+				"Xrotation": 1,
+				"Yrotation": 0,
+				"Zrotation": 0
+			}
+		},
+		"Yrotation": {
+			"rfoot": {
+				"Xrotation": 0,
+				"Yrotation": 1,
+				"Zrotation": 0
+			}
+		}	
+	},
+	"Neck":{},
+	"Head":{},
+	"LUpperarm":{
+		"const":{
+			"Xrotation": -90,
+			"Yrotation": 0,
+			"Zrotation": 0
+		}
+	},
+	"LLowerarm":{},
+	"RUpperarm":{
+		"const":{
+			"Xrotation": -90,
+			"Yrotation": 0,
+			"Zrotation": 0
+		}
+	},
+	"RLowerarm":{}
+}

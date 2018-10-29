@@ -1,9 +1,16 @@
 from bvh import Bvh
 
-with open('Retargetting/walk_in_place.bvh') as f:
+with open('../processed/wip.bvh') as f:
 	mocap = Bvh(f.read())
 
-with open('model/constraints_updated.txt') as f:
+# for frame in range(mocap.nframes):
+# 	x = mocap.frame_joint_channel(frame, "rfoot", "Xrotation")
+# 	y = mocap.frame_joint_channel(frame, "rfoot", "Yrotation")
+# 	z = mocap.frame_joint_channel(frame, "rfoot", "Zrotation")
+# 	print(frame, x, y, z,)  
+
+# with open('../model/constraints_old.txt') as f:
+with open('../model/constraints_new.txt') as f:
 	content = f.readlines()
 
 content = [x.strip() for x in content] 
@@ -20,17 +27,18 @@ for joint in content:
 start_skill_str = "STARTSKILL SKILL_TEST\n"
 start_frame_str = "STARTSTATE\n"
 end_frame_str   = "ENDSTATE\n"
-end_skill_str = "ENDSKILL\n"
+end_skill_str 	= "ENDSKILL\n"
 
 theta = 3
 prev_frame = 0
 k = 0.5
 
-with open('model/test.skl', 'w') as f:
+with open('../processed/skills/test.skl', 'w') as f:
 	f.write(start_skill_str+ "\n")	
 	
 	
 	for frame in range(0, min(mocap.nframes, 120), 3):
+		# print(frame, mocap.frame_joint_channel(frame, "LeftThigh", "Xrotation"), mocap.frame_joint_channel(frame, "LeftThigh", "Yrotation"), mocap.frame_joint_channel(frame, "LeftThigh", "Zrotation"))  
 		if (frame == 0):
 			frame_data_str = "settar "
 		else	:

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#Neural nets
+*.pt
+
 # C extensions
 *.so
 

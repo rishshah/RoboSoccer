@@ -24,7 +24,7 @@ env = Environment()
 N_S = env.state_dim
 N_A = env.action_dim
 Z = 60
-SPAN = 0.1 # in radians per sec
+SPAN = 0.3 # in radians per sec
 DELTA = 0.0001 # minimum sigma
 
 class Net(nn.Module):
@@ -106,8 +106,8 @@ class Worker(mp.Process):
     def run(self):
         total_step = 1
         while self.g_ep.value < MAX_EP:
-            if self.g_ep.value % 20 == 0:
-                torch.save(self.gnet, 'int_net_'+str(self.g_ep.value)+'.pt')
+            # if self.g_ep.value % 20 == 0:
+            #     torch.save(self.gnet, 'int_net_'+str(self.g_ep.value)+'.pt')
 
             buffer_s, buffer_a, buffer_r = [], [], []
             ep_r = 0.
@@ -139,22 +139,22 @@ class Worker(mp.Process):
 
         self.res_queue.put(None)
 
-def test(env, gnet):
-    # for x in gnet.a1.parameters():
-    #     print(x.data)
-    for x in gnet.a1.parameters():
-        print(x.data)
-    # s = env.reset()
-    # for t in range(10*MAX_EP_STEP):
-    #     a = gnet.choose_action(v_wrap(s[:]))
-    #     s, r, done, _ = env.step(env.clip_action(a, s))
+# def test(env, gnet):
+#     for x in gnet.a1.parameters():
+#         print(x.data)
+#     for x in gnet.a1.parameters():
+#         print(x.data)
+#     s = env.reset()
+#     for t in range(10*MAX_EP_STEP):
+#         a = gnet.choose_action(v_wrap(s[:]))
+#         s, r, done, _ = env.step(env.clip_action(a, s))
 
 if __name__ == "__main__":
     try:
-        if TEST:
-            test(Environment(), torch.load('int_net_60.pt'))
-            env.cleanup()
-            sys.exit()
+        # if TEST:
+        #     test(Environment(), torch.load('int_net_60.pt'))
+        #     env.cleanup()
+        #     sys.exit()
 
         gnet = Net(N_S, N_A)        # global network
         gnet.share_memory()         # share the global parameters in multiprocessing
@@ -175,7 +175,7 @@ if __name__ == "__main__":
                 break
             [w.join() for w in workers]
             
-        torch.save(gnet, 'gloal_net.pt')
+        # torch.save(gnet, 'gloal_net.pt')
         
         import matplotlib.pyplot as plt
         plt.plot(res)

@@ -6,16 +6,19 @@ sys.path.append('../motion/')
 import BVH as BVH
 import Animation as Animation
 
-with open('../data/walk_in_place.bvh') as f:
+# with open('../data/walk_in_place.bvh') as f:
+with open('../data/wave.bvh') as f:
   performer = Bvh(f.read())
 
 with open('../model/nao_heirarchy5.bvh') as f:
   end_user = Bvh(f.read())
 
-with open('../model/mapping.json') as f:
+# with open('../model/mapping.json') as f:
+with open('../model/mapping1.json') as f:
   data = json.load(f)
 
-hdm05anim, names, ftime = BVH.load("../data/walk_in_place.bvh")
+# hdm05anim, names, ftime = BVH.load("../data/walk_in_place.bvh")
+hdm05anim, names, ftime = BVH.load("../data/wave.bvh")
 targets = Animation.positions_global(hdm05anim)
 
 
@@ -49,18 +52,34 @@ transformed_frames = np.zeros((performer.nframes, len(end_user_joint_names),3))
 channels = ['Zrotation', 'Yrotation', 'Xrotation']
 
 
+# def hip_value(frame, type):
+#   if type == 0:
+#     return 0
+#   elif type == 'lhipjoint': #hip2
+#     return -lhip2[frame]
+#     return 0
+#   elif type == 'lfemur': #hip3
+#     return lhip3[frame]
+#   elif type == 'rhipjoint': #hip2
+#     return -rhip2[frame]
+#     return 0
+#   elif type == 'rfemur': #hip3
+#     return rhip3[frame]
+#   else:
+#     print("PANIC")
+#     return None
 def hip_value(frame, type):
   if type == 0:
     return 0
-  elif type == 'lhipjoint': #hip2
+  elif type == 'LHipJoint': #hip2
     return -lhip2[frame]
     return 0
-  elif type == 'lfemur': #hip3
+  elif type == 'LeftUpLeg': #hip3
     return lhip3[frame]
-  elif type == 'rhipjoint': #hip2
+  elif type == 'RHipJoint': #hip2
     return -rhip2[frame]
     return 0
-  elif type == 'rfemur': #hip3
+  elif type == 'RightUpLeg': #hip3
     return rhip3[frame]
   else:
     print("PANIC")
@@ -88,7 +107,7 @@ for frame in range(performer.nframes):
 with open('../model/nao_heirarchy5.bvh') as f:
   model = f.readlines()
 
-with open('../processed/wip.bvh', 'w') as f:
+with open('../processed/wave3.bvh', 'w') as f:
   f.write(''.join(model[:-3]))
   f.write("Frames: " + str(performer.nframes) + "\n")
   f.write("Frame Time: " + str(performer.frame_time) + "\n")

@@ -1,74 +1,86 @@
 # RoboSoccer
 Teaching elementary skills to robots using motion clips and Reinforcement Learning
 
-## Status
+##Overview
 
-### Done
-- Clips found to be used
-
-### TODO
-
-#### Part1
-- Read remaining parts of paper to figure out type of neural network used
-- Check if simulator is there in the paper itself 
-- Find simulator
-- Training the neural network
-- Figure out all parts of MDP and create environment for RL
-
-#### Part2
-- Retargetting the clips (if necessary) 
-- Figure out simulation environment (Run Aston Villa simulation (without bugs))
-- Are torques required?
-- Incorporating trained controllers in the existing framework
-
-#### Part3
-- Figure out the reward functions for goal oriented tasks
-
-## Decoding the paper
-
-#### States
+### States
 - Relative position of all links, their orientation in quaternions, linear and angular velocities.
 - Time variable “phase” between 0 and 1
 - Cyclic motions have that phase set to 0 at end
 
-#### Actions
+### Actions
 - Target orientation at each joints
 
-#### Network
-- Google how to use RL in neural net
 
-#### Reward
-
+### Reward
 - Imitation reward
 -- Pose reward (difference between join orientations)
 -- Velocity reward (difference between velocities)
 -- End effector reward
 -- Center of mass deviation penalty 
+-- Acceleration reward
 
-- Goal reward
--- LATER
-
-#### Training
-- Use of PPO with Clipped surrogate objective
-
-#### Two networks 
-- Value function
-- Policy
-
-#### Initial state distribution
+### Initial state distribution (TODO)
 Start in all possible states in the clip rather than at the start as there is a chance that high reward states are present in the very end
 
-#### Early termination
+### Early termination (DONE)
 If body torso  or head or some other links hit the ground then terminate the learning as it is wasted in getting up from those positions
 
+## Progress
+	
+###	Experiments
+	
+#### Changing learning rate 
+-- Too high (0.1) makes weights, means and other things explode
+-- Too low (0.000001) too slow in moving average change
+-- Medium val (0.001 -> 0.0001) works (meaning shit doesn't explode)
+
+#### Architecture
+
+##### Neural network ( sigma ) (not much difference in outcome)
+-- not related to mu,	
+-- realted to mu,
+-- sigmoid/softplus ? (ASK)
+-- scaled/not scaled 
+
+##### Neural network ( mu ) 
+-- smaller the better (radians/sec) 2 -> 2.3 deg /0.02 sec so limit max to 3.
+
+##### Increasing number of nodes in hidden layers
+-> 20 -> learning curve declines
+-> 70 -> it doesn't (Hopefully able to capture) (Need to test it out for each motion we want to train)
+
+#### Reward Funtion (Confirmed)
+-- Mimic part
+-- Acceration small
+-- Velocities small
+
+##### For standing motion
+-- Pose difference (Must)
+-- acceleration (Must)
+-- Velocities small (Very important only then it works)
+-- gyro rate (May be incorrect for some type of motions)
 
 
-### Discussion
-- Nao model created (check if correct)
-	-- Some Joints have been assumed not sure what to do ? SHIVARAM
-	-- Which joint in effector maps to which joint in model is difficult ? PARAG 
-	-- We would need that ?
-- What to do with those rsg files? SHIVARAM
-- Constrained nao cannot be retargetted to , so cannot test the files via skills ? BOTH
-- Simulator working 
-- In process of understanding A3C
+#### State Space
+-- All 22 joint angles
+-- All 22 actions taken
+-- gyroscope rate
+-- accelerometer rate
+		
+#### Action Space
+-- 22 angular velocity values (radians/sec)
+
+
+### Doubts
+-- Sigma net not converging to 0. Why?
+-- Can we make its span grow somehow. Coz bigger span can help only in corner cases like stopping sudden fall, but increase time of learning.
+-- Should include foot receptors part in states?
+-- No means to get location
+-- Bending backbone -> Only same lle3 and rle3 movements can make it happen. 
+
+
+### TODO
+-- Handwave training
+-- Initial state distribution 
+-- Overcome Retargeting 

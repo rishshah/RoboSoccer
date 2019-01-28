@@ -15,16 +15,13 @@ def v_wrap(np_array, dtype=np.float32):
 
 def set_init(layers):
     for layer in layers:
-        nn.init.normal_(layer.weight, mean=0., std=0.05)
+        nn.init.normal_(layer.weight, mean=0., std=0.1)
         nn.init.constant_(layer.bias, 0.1)
 
 
 def push_and_pull(opt, lnet, gnet, done, s_, bs, ba, br, gamma):
-    if done:
-        v_s_ = 0.               # terminal
-    else:
-        v_s_ = lnet.forward(v_wrap(s_[None, :]))[-1].data.numpy()[0, 0]
-    # print("aaaa",v_s_)
+    v_s_ = 0.               # terminal
+
     buffer_v_target = []
     for r in br[::-1]:    # reverse buffer r
         v_s_ = r + gamma * v_s_
@@ -43,6 +40,9 @@ def push_and_pull(opt, lnet, gnet, done, s_, bs, ba, br, gamma):
         gp._grad = lp.grad
     opt.step()
 
+    # for x in gnet.a3.parameters():
+    #     print(x.data)
+    
     # pull global parameters
     lnet.load_state_dict(gnet.state_dict())
 

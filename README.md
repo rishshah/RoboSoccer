@@ -52,8 +52,8 @@ If body torso  or head or some other links hit the ground then terminate the lea
 
 #### Reward Funtion (Confirmed)
 - Mimic part
-- Acceration small
-- Velocities small
+- Acceration small (Not necessary)
+- Velocities small (Not necessary)
 
 ##### For standing motion
 - Pose difference (Must)
@@ -69,22 +69,34 @@ If body torso  or head or some other links hit the ground then terminate the lea
 - accelerometer rate
 		
 #### Action Space
--- 22 angular velocity values (radians/sec)
+- 22 angular velocity values (radians/sec)
 
 
-### Doubts
+### Doubts 	
 - Sigma net not converging to 0. Why?
-- Can we make its span grow somehow. Coz bigger span can help only in corner cases like stopping sudden fall, but increase time of learning.
-- No means to get location
+- Can we make mu span grow somehow. Coz bigger span can help only in corner cases like stopping sudden fall, but increase time of learning.
+- No means to get location except using its visual receptors
 - Bending backbone -> Only same lle3 and rle3 movements can make it happen. 
-- Should we punish fallen state
+- Should we punish fallen state or/and include accelearation reward
+- How many episodes to wait for?
+- How to map progress?
+- Anything Missing?
+- Is moving average the best metric? What others can we use? Should see improvement/ how far from ideal
+- Is cross entropy loss the best thing. How is it training the sigma network?
+- Getting random trajectories for the learning curve
 
 ### TODO
 - Handwave training
-- Initial state distribution 
+- Handwave training with perfect standing
+	- Neural net allowed to tweak other outputs (Random restarts needed once gone to one trajectory, it doesn't explore rest of the stuff at all. How to avoid this?) 
+	- Reducing action space
+- Handle fallen thing? Whatever given in the checkfall.cc is wrong...
+
+- Initial state distribution (Cannot place it in arbitrary position)
 - Should include foot receptors part in states? (Difficulty as not always provided)
 - Overcome Retargeting 
 
 
 ### Results
 - Handwave difficulty as not able to learn to stand? Maybe teach standing and initialize those weights before teaching handwave
+- 0.3 span it falls a lot.

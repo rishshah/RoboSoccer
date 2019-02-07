@@ -99,8 +99,8 @@ class Environment(object):
             return None, 0, True, None
 
     def reward_state(self, state, time):
-        x = sum([state[s]*state[s] for s in state])
-        x -= state["lae1"]*state["lae1"] + state["rae1"]*state["rae1"]
+        # x = sum([state[s]*state[s] for s in state])
+        # x -= state["lae1"]*state["lae1"] + state["rae1"]*state["rae1"]
         x = (state["lae1"] + time * 20)* (state["lae1"] + time * 20)
         x += (state["rae1"] - time * 20)* (state["rae1"] - time * 20)
         # print("(reward_state) ", time, state["rae1"], (state["rae1"] - time * 20), x)
@@ -123,6 +123,7 @@ class Environment(object):
         #     reward -= 100000
         # elif self.time_up(time):
             # reward .+= 100000
+        # print(reward)
         return reward
 
     def reset(self):

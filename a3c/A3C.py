@@ -14,7 +14,7 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 1
+NUM_THREADS = 4
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
@@ -186,6 +186,9 @@ class Worker(mp.Process):
                 record(self.g_ep, self.g_ep_r, ep_r, self.res_queue, self.name)
 
         self.res_queue.put(None)
+ 
+    def cleanup(self):
+        self.env.cleanup()
 
 def test():
     gnet = torch.load(modelName)
@@ -218,8 +221,8 @@ if __name__ == "__main__":
         global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
         # Parallel Training
-        agent_port = 3102
-        monitor_port = 3202
+        agent_port = 3100
+        monitor_port = 3200
         workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, agent_port + i, monitor_port + i, i) for i in range(0,NUM_THREADS)]
         
         # Train
@@ -243,10 +246,15 @@ if __name__ == "__main__":
         plt.show()
         
         #Cleanup
+        for w in workers:
+            w.cleanup()
         env.cleanup()
         sys.exit()
 
     except(KeyboardInterrupt, SystemExit):
+        for w in workers:
+            w.cleanup()
+
         env.cleanup()
         sys.exit()
         

@@ -9,6 +9,7 @@
 - pip3 install torchvision
 - pip3 install sexpdata
 - pip3 install bvh
+- pip3 instal matplotlib
 
 ## Sublime
 - wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -

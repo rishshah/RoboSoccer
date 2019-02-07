@@ -14,7 +14,7 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 1
+NUM_THREADS = 10
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
@@ -31,7 +31,10 @@ DELTA = 0.0001 # minimum sigma
 
 modelName = 'int_net.pt'
 loadModel = False
+testModel = False
 learning_rate = 0.001
+
+is_gpu_available = torch.cuda.is_available()
 
 class Net(nn.Module):
     def __init__(self, s_dim, a_dim):
@@ -106,7 +109,8 @@ class Worker(mp.Process):
         self.name = 'w%i' % name
         self.g_ep, self.g_ep_r, self.res_queue = global_ep, global_ep_r, res_queue
         self.gnet, self.opt = gnet, opt
-        self.lnet = copy.deepcopy(self.gnet) #TODO self.lnet = Net(N_S, N_A)
+        self.lnet = copy.deepcopy(self.gnet) #TODO 
+        # self.lnet = Net(N_S, N_A)
         self.env = Environment(agent_port=agent_port, monitor_port=monitor_port)
 
     def run(self):
@@ -173,7 +177,11 @@ def test():
 
 if __name__ == "__main__":
     try:
-        # test()
+        if testModel:
+            test()
+            env.cleanup()
+            sys.exit()
+
         # Load Intermediate model
         if loadModel:
             gnet = torch.load(modelName)
@@ -186,9 +194,9 @@ if __name__ == "__main__":
         global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
         # Parallel Training
-        agent_ports = [3100, 3101, 3102, 3103]
-        monitor_ports = [3200, 3201, 3202, 3203]
-        workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, agent_ports[i], monitor_ports[i], i) for i in range(0,NUM_THREADS)]
+        agent_port = 3100
+        monitor_port = 3200
+        workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, agent_port + i, monitor_port + i, i) for i in range(0,NUM_THREADS)]
         
         # Train
         [w.start() for w in workers]

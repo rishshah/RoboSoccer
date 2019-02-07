@@ -3,7 +3,6 @@ import math
 
 class MotionClip(object):
     def __init__(self, mocap_file: str, constraints_file: str):
-        print(mocap_file)
         with open(mocap_file) as f:
             self.mocap = Bvh(f.read())
         with open(constraints_file) as f:

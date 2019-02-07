@@ -6,9 +6,8 @@ import numpy as np
 import socket, struct
 from client.agent import BaseAgent
 from imitation.motion_clip import MotionClip
-from simple_pid import PID
 
-CWD = "/home/rishshah/Documents/Sem8/Study_Material/BTP/RoboSoccer/Environment/"
+CWD = os.path.dirname(__file__)
 
 class Environment(object):
     # Global Constants
@@ -20,11 +19,11 @@ class Environment(object):
     A_HOST = "localhost"
     A_PORT = 3100
     M_PORT = 3200
-    MOTION_CLIP = CWD + "imitation/ss.bvh"
-    CONSTRAINTS = CWD + "imitation/constraints.txt"
+    MOTION_CLIP = CWD + "/imitation/ss.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints.txt"
     
     #Server and Monitor
-    LD_LIBRARY_PATH = CWD + "server/ld_library_path"
+    LD_LIBRARY_PATH = CWD + "/server/ld_library_path"
     SERVER = "rcssserver3d"
     MONITOR = "rcssmonitor3d"
     

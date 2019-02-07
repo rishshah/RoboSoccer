@@ -31,7 +31,7 @@ class Environment(object):
         # "lle1","lle2","lle3","lle4","lle5","lle6",
         # "rle1","rle2","rle3","rle4","rle5","rle6",
         # "lle4", "rle4",
-        # "he1","he2",
+        "he1","he2",
         "lae1",#"lae2","lae3","lae4",
         "rae1",#"rae2","rae3","rae4"
     ]
@@ -99,10 +99,10 @@ class Environment(object):
             return None, 0, True, None
 
     def reward_state(self, state, time):
-        # x = sum([state[s]*state[s] for s in state])
-        # x -= state["lae1"]*state["lae1"] + state["rae1"]*state["rae1"]
+        x = sum([state[s]*state[s] for s in state])
+        x -= state["lae1"]*state["lae1"] + state["rae1"]*state["rae1"]
         x = (state["lae1"] + time * 20)* (state["lae1"] + time * 20)
-        x += (state["rae1"] - time * 20)* (state["rae1"] - time * 20)
+        x += (state["rae1"] + time * 20)* (state["rae1"] + time * 20)
         # print("(reward_state) ", time, state["rae1"], (state["rae1"] - time * 20), x)
         return -0.1*x
     
@@ -164,7 +164,6 @@ class Environment(object):
     def start_server(self):
         with open(self.LD_LIBRARY_PATH) as f:
             path = f.readlines()
-
         os.environ['LD_LIBRARY_PATH'] = path[0].strip()     
         server_command = "({} --agent-port {} --server-port {} > /dev/null 2>&1 &)".format(self.SERVER, self.agent_port, self.monitor_port)
         os.system(server_command)

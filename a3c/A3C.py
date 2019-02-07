@@ -14,7 +14,7 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 4
+NUM_THREADS = 1
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
@@ -126,7 +126,7 @@ class Worker(mp.Process):
         while self.g_ep.value < MAX_EP:
             
             # Save intermediate model
-            if self.g_ep.value % 20 == 0:
+            if self.g_ep.value % 20 == 19:
                 torch.save(self.gnet, modelName)
 
             # Reset rewards, state
@@ -192,10 +192,12 @@ class Worker(mp.Process):
 
 def test():
     gnet = torch.load(modelName)
-    s = env.reset()
+    e = Environment()
+    s = e.reset()
     for t in range(MAX_EP_STEP):
-        a = gnet.choose_action(v_wrap(s[:]))
-        s, r, done, _ = env.step(env.clip_action(a, s))    
+        s, _, done, _ = e.step(gnet.choose_action(v_wrap(s[:])))    
+        # if done:
+        # 	break	
 
 if __name__ == "__main__":
     try:
@@ -252,9 +254,6 @@ if __name__ == "__main__":
         sys.exit()
 
     except(KeyboardInterrupt, SystemExit):
-        for w in workers:
-            w.cleanup()
-
         env.cleanup()
         sys.exit()
         

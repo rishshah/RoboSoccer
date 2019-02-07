@@ -14,7 +14,7 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 10
+NUM_THREADS = 1
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
@@ -81,17 +81,22 @@ class Net(nn.Module):
 
     def choose_action(self, s):
         self.training = False
-        mu, sigma, val = self.forward(s)
-        # print("(mu)", mu)
-        # print("(sigma)", sigma)
-        # print("(val)", val)
+        mu, sigma, _ = self.forward(s)
+        
+        if is_gpu_available:
+            mu, sigma = mu.cuda(), sigma.cuda()
+
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
-        y = m.sample().numpy()
+        y = m.sample().cpu().numpy()
         return y
 
     def loss_func(self, s, a, v_t):
         self.train()
         mu, sigma, values = self.forward(s)
+        
+        if is_gpu_available:
+            mu, sigma, values = mu.cuda(), sigma.cuda(), values.cuda()
+        
         td = v_t - values
         c_loss = td.pow(2)
 
@@ -111,6 +116,9 @@ class Worker(mp.Process):
         self.gnet, self.opt = gnet, opt
         self.lnet = copy.deepcopy(self.gnet) #TODO 
         # self.lnet = Net(N_S, N_A)
+        if is_gpu_available:
+            self.lnet = self.lnet.cuda()
+            
         self.env = Environment(agent_port=agent_port, monitor_port=monitor_port)
 
     def run(self):
@@ -125,23 +133,35 @@ class Worker(mp.Process):
             buffer_s, buffer_a, buffer_r = [], [], []
             ep_r = 0.
             s = self.env.reset()
-
+            if is_gpu_available:
+                s = torch.from_numpy(s).float()
+                s = s.cuda()
             # Simulate this episode
             for t in range(MAX_EP_STEP):
                 
                 # Sample action from model and step into environment
-                a = self.lnet.choose_action(v_wrap(s[:]))
+                if is_gpu_available:
+                    a = self.lnet.choose_action(s)
+                else:
+                    a = self.lnet.choose_action(v_wrap(s[:]))
+
                 s_, r, done, _ = self.env.step(a)
                 
-                # Collect Rewards, States, Actions for later
                 if s_ is not None:
                     ep_r += r
-                    buffer_s.append(s)
+                    buffer_s.append(s_)
                     buffer_a.append(a)
                     buffer_r.append(r)
                 else:
                     done = False
                     break
+                
+
+                if is_gpu_available:
+                    s_ = torch.from_numpy(s_).float()
+                    s_ = s_.cuda()
+                
+                # Collect Rewards, States, Actions for later
                 
                 # Update new state
                 s = s_
@@ -160,8 +180,7 @@ class Worker(mp.Process):
                 print("MAX", self.env.max_acc_x, self.env.max_acc_y)
                 
                 # Update Global And Local Neural Nets After This Episode
-                push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA)
-                
+                push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA, is_gpu_available)
                 # Record the cumulative reward and update average
                 buffer_s, buffer_a, buffer_r = [], [], []
                 record(self.g_ep, self.g_ep_r, ep_r, self.res_queue, self.name)
@@ -177,6 +196,11 @@ def test():
 
 if __name__ == "__main__":
     try:
+        if is_gpu_available:
+            torch.multiprocessing.set_start_method("spawn")
+            torch.cuda.init()
+            torch.cuda.device(0)
+
         if testModel:
             test()
             env.cleanup()
@@ -194,8 +218,8 @@ if __name__ == "__main__":
         global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
         # Parallel Training
-        agent_port = 3100
-        monitor_port = 3200
+        agent_port = 3102
+        monitor_port = 3202
         workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, agent_port + i, monitor_port + i, i) for i in range(0,NUM_THREADS)]
         
         # Train

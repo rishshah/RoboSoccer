@@ -5,6 +5,8 @@ __pycache__/
 
 #Neural nets
 *.pt
+#Library Path
+Environment/server/ld_library_path/ld_library_path
 
 # C extensions
 *.so

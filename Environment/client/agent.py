@@ -76,10 +76,17 @@ class BaseAgent(SimSparkServer):
 
         for arg in data[4:]:
             if sexpdata.dumps(arg[0]) == 'See':
-                self.pos = arg[6][1:]
-                self.orr = arg[7][-1]
+                for a in arg[1:] :
+                    if sexpdata.dumps(a[0]) == 'mypos':
+                        self.pos = a[1:]
+                    if sexpdata.dumps(a[0]) == 'myorien':
+                        self.orr = a[-1]
+                        break
                 break
 
+        # for s in self.state:
+        #     if s in ["lle4", "rle4","lle3", "rle3"]:
+        #         print(s, self.state[s])
         return self.state, self.acc, self.gyr, self.pos, self.orr, float(self.time), self.is_fallen(), 
 
     def initialize(self):

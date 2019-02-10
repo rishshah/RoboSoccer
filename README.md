@@ -44,7 +44,6 @@ Teaching elementary skills to robots using motion clips and Reinforcement Learni
 
 
 ### Doubts 	
-- Sigma net not converging to 0. Why?
 - Can we make mu span grow somehow. Coz bigger span can help only in corner cases like stopping sudden fall, but increase time of learning.
 - Should we punish fallen state or/and include accelearation reward
 - Getting random trajectories for the learning curve

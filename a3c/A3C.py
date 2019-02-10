@@ -29,6 +29,9 @@ Z = 70 # number of hidden nodes in each layer
 SPAN = 0.5 # in radians per sec
 DELTA = 0.0001 # minimum sigma
 
+# modelName = 'upper_body+2legjoint.pt'
+# modelName = 'hand_opposite_net.pt'
+# modelName = 'situps.pt'
 modelName = 'int_net.pt'
 loadModel = False
 testModel = False
@@ -62,19 +65,19 @@ class Net(nn.Module):
         self.distribution = torch.distributions.Normal
 
     def forward(self, x):
-        a1 = F.relu(self.a1(x))
-        a2 = F.relu(self.a2(a1))
-        a3 = F.relu(self.a3(a2))
+        a1 = torch.tanh(self.a1(x))
+        a2 = torch.tanh(self.a2(a1))
+        a3 = torch.tanh(self.a3(a2))
         mu = SPAN * torch.tanh(self.mu(a3))
 
-        b1 = F.relu(self.b1(x))
-        b2 = F.relu(self.b2(b1))
-        b3 = F.relu(self.b3(b2))
+        b1 = torch.tanh(self.b1(x))
+        b2 = torch.tanh(self.b2(b1))
+        b3 = torch.tanh(self.b3(b2))
         sigma = F.softplus(self.sigma(b3)) + DELTA # TODO Is delta necessary 
 
-        c1 = F.relu(self.c1(x))
-        c2 = F.relu(self.c2(c1))
-        c3 = F.relu(self.c3(c2))
+        c1 = torch.tanh(self.c1(x))
+        c2 = torch.tanh(self.c2(c1))
+        c3 = torch.tanh(self.c3(c2))
         values = self.v(c3)
         
         return mu, sigma, values
@@ -114,8 +117,8 @@ class Worker(mp.Process):
         self.name = 'w%i' % name
         self.g_ep, self.g_ep_r, self.res_queue = global_ep, global_ep_r, res_queue
         self.gnet, self.opt = gnet, opt
-        self.lnet = copy.deepcopy(self.gnet) #TODO 
-        # self.lnet = Net(N_S, N_A)
+        # self.lnet = copy.deepcopy(self.gnet) #TODO 
+        self.lnet = Net(N_S, N_A)
         if is_gpu_available:
             self.lnet = self.lnet.cuda()
             
@@ -197,7 +200,7 @@ def test():
     for t in range(MAX_EP_STEP):
         s, _, done, _ = e.step(gnet.choose_action(v_wrap(s[:])))    
         # if done:
-        # 	break	
+        #   break   
 
 if __name__ == "__main__":
     try:
@@ -245,7 +248,8 @@ if __name__ == "__main__":
         plt.plot(res)
         plt.ylabel('Moving average ep reward')
         plt.xlabel('Step')
-        plt.show()
+        # plt.show()
+        plt.savefig("lc.png")
         
         #Cleanup
         for w in workers:

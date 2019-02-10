@@ -7,12 +7,14 @@ from client.agent import BaseAgent
 from imitation.motion_clip import MotionClip
 
 CWD = os.path.dirname(__file__)
+if CWD == "":
+    CWD = "."
 
 class Environment(object):
     # Global Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 2
+    SIMULATION_TIME = 4
 
     #Connection to Server and Motion Clip
     A_HOST = "localhost"
@@ -30,10 +32,11 @@ class Environment(object):
     STATE_KEYS = [
         # "lle1","lle2","lle3","lle4","lle5","lle6",
         # "rle1","rle2","rle3","rle4","rle5","rle6",
-        # "lle4", "rle4",
-        "he1","he2",
-        "lae1",#"lae2","lae3","lae4",
-        "rae1",#"rae2","rae3","rae4"
+        "lle4", "rle4",
+        "lle3", "rle3",
+        # "he1","he2",
+        # "lae1","lae2","lae3","lae4",
+        # "rae1","rae2","rae3","rae4"
     ]
 
     DIM = len(STATE_KEYS)
@@ -58,7 +61,7 @@ class Environment(object):
         self.monitor_port = monitor_port
         self.host = host
 
-        self.state_dim = self.DIM*2  + 10
+        self.state_dim = self.DIM*2  + 11
         self.action_dim = self.DIM
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
@@ -79,19 +82,22 @@ class Environment(object):
             #     tmp[s] = 0
         return tmp
 
-    def demap_state(self, state, acc, gyr, pos, orr, velocities):
+    def demap_state(self, state, acc, gyr, pos, orr, velocities, time):
         tmp = [state[s] for s in self.STATE_KEYS]
         tmp = tmp + list(velocities)
         tmp = tmp + list(acc)
         tmp = tmp + list(gyr)
         tmp = tmp + list(pos)
         tmp = tmp + [orr]
+        tmp = tmp + [time]
+        if len(tmp) < 19:
+            print(state, acc, gyr, pos, orr, velocities, time)           
         return np.array(tmp)        
 
     def step(self, action, sp=False):
         try:
             state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(self.map_action(action, sp))
-            ret_state = self.demap_state(state, acc, gyr, pos, orr, action)
+            ret_state = self.demap_state(state, acc, gyr, pos, orr, action, time - self.time)
             ret_reward = self.generate_reward(state, acc, gyr, action, time, is_fallen)  
             return ret_state, ret_reward, self.time_up(time), None        
         
@@ -99,11 +105,11 @@ class Environment(object):
             return None, 0, True, None
 
     def reward_state(self, state, time):
-        x = sum([state[s]*state[s] for s in state])
-        x -= state["lae1"]*state["lae1"] + state["rae1"]*state["rae1"]
-        x = (state["lae1"] + time * 20)* (state["lae1"] + time * 20)
-        x += (state["rae1"] + time * 20)* (state["rae1"] + time * 20)
-        # print("(reward_state) ", time, state["rae1"], (state["rae1"] - time * 20), x)
+        x = (state["lle4"] + time * 13)* (state["lle4"] + time * 13)
+        x += (state["lle3"] - time * 20)* (state["lle3"] - time * 20)
+        x += (state["rle4"] + time * 13)* (state["rle4"] + time * 13)
+        x += (state["rle3"] - time * 20)* (state["rle3"] - time * 20)
+        # print("(reward_state) ", time, state["he1"], state["he2"], x)
         return -0.1*x
     
     def generate_reward(self, state, acc, gyr, action, time, is_fallen):
@@ -121,8 +127,8 @@ class Environment(object):
         # if is_fallen:
         #     print('(generate_reward) fallen ', acc)
         #     reward -= 100000
-        # elif self.time_up(time):
-            # reward .+= 100000
+        if self.time_up(time) and  not is_fallen:
+            reward += 100000
         # print(reward)
         return reward
 
@@ -150,7 +156,7 @@ class Environment(object):
             self.start_server()
             self.time = self.agent.initialize()            
 
-        state, reward, done, _ = self.step(action=self.DEFAULT_ACTION)
+        state, _, _, _ = self.step(action=self.DEFAULT_ACTION)
         return state
         
 
@@ -168,15 +174,24 @@ class Environment(object):
         server_command = "({} --agent-port {} --server-port {} > /dev/null 2>&1 &)".format(self.SERVER, self.agent_port, self.monitor_port)
         os.system(server_command)
         print("server starting... ")
-        time.sleep(1);
+        time.sleep(0.3);
         
 
 
 if __name__ == "__main__":
-    env = Environment(agent_port=3501, monitor_port=3502)
+    env = Environment()
     env.reset()
-    action = np.zeros(6);
-    action[0] = 0.1;
-    action[1] = 0.1;
-    for i in range(1,1000):
+    action = np.zeros(4);
+    action[0] = -0.23;
+    action[1] = -0.23;
+    action[2] = 0.35;
+    action[3] = 0.35;
+    for i in range(1,200):
+        env.step(action);
+
+    action[0] = 0.23;
+    action[1] = 0.23;
+    action[2] = -0.35;
+    action[3] = -0.35;
+    for i in range(1,200):
         env.step(action);

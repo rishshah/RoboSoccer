@@ -14,19 +14,19 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 1
+NUM_THREADS = 2
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
-MAX_EP = 1500 # Max episodes
+MAX_EP = 2000 # Max episodes
 MAX_EP_STEP = 600 # Max episode step
 
 env = Environment()
 N_S = env.state_dim
 N_A = env.action_dim
 
-Z = 70 # number of hidden nodes in each layer
-SPAN = 0.5 # in radians per sec
+Z = 80 # number of hidden nodes in each layer
+SPAN = 1 # in radians per sec
 DELTA = 0.0001 # minimum sigma
 
 # modelName = 'upper_body+2legjoint.pt'
@@ -34,9 +34,9 @@ DELTA = 0.0001 # minimum sigma
 # modelName = 'stand.pt'
 # modelName = 'falling_but_following.pt'
 modelName = 'int_net.pt'
-loadModel = False
+loadModel = True
 testModel = False
-learning_rate = 0.01
+learning_rate = 0.0001
 
 is_gpu_available = torch.cuda.is_available()
 class Net(nn.Module):

@@ -15,10 +15,10 @@ class Environment(object):
     # Global Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 10
+    SIMULATION_TIME = 8
 
     #Connection to Server and Motion Clip
-    MOTION_CLIP = CWD + "/imitation/debug/hand_opposite.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/situps.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     
     # Server and Monitor
@@ -89,7 +89,7 @@ class Environment(object):
         tmp = {}
         for i, s in enumerate(self.STATE_KEYS):
             tmp[s] = action[i]
-        print(tmp)
+        # print(tmp)
         return tmp
 
     def update_motion(self, state):
@@ -218,16 +218,21 @@ if __name__ == "__main__":
     # env = Environment()
     # env.reset()
     # action = env.DEFAULT_ACTION;
-    # action[0] = 0.3;
-    # action[1] = -0.3;
+    # action[0] = 0.4;
+    # action[1] = -0.4;
+    # for i in range(1,100):
+    #     env.step(action);
+
+    # action[0] = -0.4;
+    # action[1] = 0.4;
     # for i in range(1,200):
     #     env.step(action);
 
-    # action[0] = -0.3;
-    # action[1] = 0.3;
-    # for i in range(1,400):
+    # action[0] = 0.4;
+    # action[1] = -0.4;
+    # for i in range(1,100):
     #     env.step(action);
-    
+
     # env.save_motion("./imitation/debug/hand_opposite.bvh")
 
     # env = Environment()

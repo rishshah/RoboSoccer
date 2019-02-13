@@ -36,8 +36,7 @@ Teaching elementary skills to robots using motion clips and Reinforcement Learni
 - 3 Gyroscope rate
 - 3 Accelerometer rate
 - 4 Postion and orientation of root
-- Time variable “phase” between 0 and 1
-- Cyclic motions have that phase set to 0 at end
+- Time variable “phase”
 		
 #### Action Space
 - 22 angular velocity values (radians/sec)
@@ -46,13 +45,9 @@ Teaching elementary skills to robots using motion clips and Reinforcement Learni
 ### Doubts 	
 - Can we make mu span grow somehow. Coz bigger span can help only in corner cases like stopping sudden fall, but increase time of learning.
 - Should we punish fallen state or/and include accelearation reward
-- Getting random trajectories for the learning curve
 
 ### TODO
 - Initial state distribution (Cannot place it in arbitrary position)
-- Increase speed of simulation, using GPU
-- Complex motions of situps, balance and handwaves
-- Make it stand and balance with all 22 effectors
 - Overcome Retargeting 
 
 ### Initial state distribution (TODO)

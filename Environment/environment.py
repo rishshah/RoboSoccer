@@ -15,10 +15,10 @@ class Environment(object):
     # Global Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 8
+    SIMULATION_TIME = 7.9
 
     #Connection to Server and Motion Clip
-    MOTION_CLIP = CWD + "/imitation/debug/situps.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     
     # Server and Monitor
@@ -112,13 +112,13 @@ class Environment(object):
                 f.write(" ".join(frame) + "\n")
 
     def demap_state(self, state, acc, gyr, pos, orr, velocities, time):
-        tmp = [state[s] for s in self.STATE_KEYS]
-        tmp = tmp + list(velocities)
+        tmp = [state[s]/10.0 for s in self.STATE_KEYS]
+        tmp = tmp + list([5*v for v in velocities])
         tmp = tmp + list(acc)
-        tmp = tmp + list(gyr)
-        tmp = tmp + list(pos)
-        tmp = tmp + [orr]
-        tmp = tmp + [time - self.time]           
+        tmp = tmp + list([10*g for g in gyr])
+        tmp = tmp + list([6*p for p in pos])
+        tmp = tmp + [orr/10]
+        tmp = tmp + [(time - self.time)*2]          
         return np.array(tmp)        
 
     def step(self, action, sp=False):
@@ -135,13 +135,14 @@ class Environment(object):
     
     def generate_reward(self, state, acc, gyr, action, time, is_fallen):
         sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
-        reward = 0.1 * sim
+        # print(sim)
+        reward = 10 + sim
         # if is_fallen:
         #     print('(generate_reward) fallen ', acc)
         #     reward -= 100000
         # elif self.time_up(time):
         #     reward += 10000
-        return reward
+        return reward * 0.01
 
     def reset(self):
         self.count_reset += 1
@@ -233,7 +234,7 @@ if __name__ == "__main__":
     # for i in range(1,100):
     #     env.step(action);
 
-    # env.save_motion("./imitation/debug/hand_opposite.bvh")
+    # env.save_motion("./imitation/debug/hands_opposite.bvh")
 
     # env = Environment()
     # env.reset()

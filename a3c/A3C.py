@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.multiprocessing as mp
 import math, os
+import numpy as np
 
 sys.path.append('../')
 sys.path.append('../Environment')
@@ -34,7 +35,7 @@ DELTA = 0.0001 # minimum sigma
 # modelName = 'stand.pt'
 # modelName = 'falling_but_following.pt'
 modelName = 'int_net.pt'
-loadModel = True
+loadModel = False
 testModel = False
 learning_rate = 0.0001
 
@@ -85,7 +86,7 @@ class Net(nn.Module):
     def choose_action(self, s):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        
+        # print(mu, sigma)
         if is_gpu_available:
             mu, sigma = mu.cuda(), sigma.cuda()
         
@@ -150,6 +151,7 @@ class Worker(mp.Process):
 
                 s_, r, done, _ = self.env.step(a)
                 
+                # Collect Rewards, States, Actions for later
                 if s_ is not None:
                     ep_r += r
                     buffer_s.append(s_)
@@ -159,14 +161,10 @@ class Worker(mp.Process):
                     done = False
                     break
                 
-
+                # Update new state
                 if is_gpu_available:
                     s_ = torch.from_numpy(s_).float()
                     s_ = s_.cuda()
-                
-                # Collect Rewards, States, Actions for later
-                
-                # Update new state
                 s = s_
                 
                 # Early Termination
@@ -178,6 +176,10 @@ class Worker(mp.Process):
                     done = True
 
             if done:  
+                # Reward Normalization
+                # r_mean = np.mean(buffer_r)
+                # buffer_r = (buffer_r - r_mean) / np.std(buffer_r)
+                
                 print("(Total_Reward)",ep_r)
                 
                 # Update Global And Local Neural Nets After This Episode

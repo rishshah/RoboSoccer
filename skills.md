@@ -2,9 +2,10 @@
 
 ## Hands Opposite Motion
 - Allowed Joints 2
-- Relu Activation everywhere
+- Tanh Activation everywhere
 - lr 0.001
-- 1 thread
+- 3 thread
+- hand_opposite.bvh
 
 ### State Space
 - 2 joints
@@ -17,11 +18,6 @@
 ### Reward Function
 - -690
 - Sum of square of all joint position differences from time-linear motion of hands  
-```
- x = (state["lae1"] + time * 20)* (state["lae1"] + time * 20)
- x += (state["rae1"] + time * 20)* (state["rae1"] + time * 20)
- reward = 10 - 0.1 * x
-```
 
 
 ## Stay steady 
@@ -29,6 +25,7 @@
 - Tanh Activation everywhere
 - lr 0.001
 - 2 threads
+- stand.bvh
 
 ### State Space
 - 12 joints
@@ -42,16 +39,13 @@
 ### Reward Function
 - -1590
 - Sum of square of all joint position differences
-```
-	x = sum([state[s]*state[s] for s in state])
-    reward = 10 - 0.1 * x
-```
 
 
 ## Situps 
-- Allowed Joints 4 ( 2 hips + 2 knees)
+- Allowed Joints 6 ( 2 hips + 2 knees + 2 ankles)
 - Tanh Activation everywhere
 - lr 0.001
+- situps.bvh
 
 ### State Space
 - 4 joints
@@ -59,7 +53,7 @@
 - 3 GYR
 - 3 ACC
 - 3 Pos
-- 1 Orr
+Tanh 1 Orr
 - 1 Time
 
 ### Reward Function 

@@ -7,7 +7,7 @@ import sexpdata, math
 
 class BaseAgent(SimSparkServer):
     MODEL_PATH = "rsg/agent/nao/nao.rsg"  # Defaults to Nao model
-    FALLEN_PARAM = 9
+    FALLEN_PARAM = 8
     SPURIOUS_THRESHOLD = 20
     K = 0.9
     def __init__(self, teamname: str, player_number: int, host: str, port: int):
@@ -87,6 +87,7 @@ class BaseAgent(SimSparkServer):
         # for s in self.state:
         #     if s in ["lle4", "rle4","lle3", "rle3"]:
         #         print(s, self.state[s])
+        
         return self.state, self.acc, self.gyr, self.pos, self.orr, float(self.time), self.is_fallen(), 
 
     def initialize(self):
@@ -116,6 +117,7 @@ class BaseAgent(SimSparkServer):
         self.synchronize()
         
         # Send entire message
+        # print(self.cycle_message)
         self.send_message(self.cycle_message)
 
         return self._parse_preceptors(self.receive_message())
@@ -125,7 +127,6 @@ class BaseAgent(SimSparkServer):
         fallenDown = float(self.acc[0]) > self.FALLEN_PARAM
         fallenRight = float(self.acc[1]) < -self.FALLEN_PARAM
         fallenLeft = float(self.acc[0]) >  self.FALLEN_PARAM
-        # print('is_fallen) ',accel)
         return fallenUp or fallenDown or fallenRight or fallenLeft
     
     def filter_acc(self, acc):

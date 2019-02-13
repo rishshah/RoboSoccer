@@ -21,27 +21,21 @@ class MotionClip(object):
 
     def get_pose(self, time:float):
         pose = {}
-        # print('(get_pose) time, ftime '  + str(time)  + " "  + str(self.mocap.frame_time))
         frame = int(round(time / self.mocap.frame_time)) 
         if frame >= self.mocap.nframes:
             return None
 
-        print("(get_pose) FN : ", frame)
-
+        # print("(get_pose) FN : ", frame)
         for joint in self.mocap.get_joints_names():
             for channel in self.mapping[joint]:
                 curr_angle = self.mocap.frame_joint_channel(frame, joint, channel[0])
-                # init_angle = self.mocap.frame_joint_channel(0, joint, channel[0])
                 pose[str(channel[1]).lower()] =  curr_angle;
         return pose
 
-    def similarity(self, time:float, actual_pose, keys):
+    def similarity(self, time, actual_pose, keys):
         target_pose = self.get_pose(time)
         if target_pose is not None:
-            dist = self.euclead_distance(actual_pose, target_pose, keys)
-            # if dist > 50:
-            #     print(actual_pose, target_pose)
-            return - dist
+            return -1 * self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0

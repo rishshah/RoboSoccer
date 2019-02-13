@@ -18,7 +18,7 @@ NUM_THREADS = 1
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
-MAX_EP = 1000 # Max episodes
+MAX_EP = 1500 # Max episodes
 MAX_EP_STEP = 600 # Max episode step
 
 env = Environment()
@@ -31,14 +31,14 @@ DELTA = 0.0001 # minimum sigma
 
 # modelName = 'upper_body+2legjoint.pt'
 # modelName = 'hand_opposite_net.pt'
-# modelName = 'situps.pt'
+# modelName = 'stand.pt'
+# modelName = 'falling_but_following.pt'
 modelName = 'int_net.pt'
 loadModel = False
 testModel = False
-learning_rate = 0.001
+learning_rate = 0.01
 
 is_gpu_available = torch.cuda.is_available()
-
 class Net(nn.Module):
     def __init__(self, s_dim, a_dim):
         super(Net, self).__init__()
@@ -88,7 +88,7 @@ class Net(nn.Module):
         
         if is_gpu_available:
             mu, sigma = mu.cuda(), sigma.cuda()
-
+        
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         y = m.sample().cpu().numpy()
         return y
@@ -179,8 +179,6 @@ class Worker(mp.Process):
 
             if done:  
                 print("(Total_Reward)",ep_r)
-                print("MIN", self.env.min_acc_x, self.env.min_acc_y)
-                print("MAX", self.env.max_acc_x, self.env.max_acc_y)
                 
                 # Update Global And Local Neural Nets After This Episode
                 push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA, is_gpu_available)

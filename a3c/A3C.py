@@ -20,13 +20,13 @@ os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
 MAX_EP = 2000 # Max episodes
-MAX_EP_STEP = 600 # Max episode step
+MAX_EP_STEP = 500 # Max episode step
 
 env = Environment()
 N_S = env.state_dim
 N_A = env.action_dim
 
-Z = 80 # number of hidden nodes in each layer
+Z = 100 # number of hidden nodes in each layer
 SPAN = 1 # in radians per sec
 DELTA = 0.0001 # minimum sigma
 
@@ -37,7 +37,7 @@ DELTA = 0.0001 # minimum sigma
 modelName = 'int_net.pt'
 loadModel = False
 testModel = False
-learning_rate = 0.0001
+learning_rate = 0.0002
 
 is_gpu_available = torch.cuda.is_available()
 class Net(nn.Module):
@@ -46,39 +46,39 @@ class Net(nn.Module):
         self.s_dim = s_dim
         self.a_dim = a_dim
         
-        self.a1 = nn.Linear(s_dim, Z)
+        self.com = nn.Linear(s_dim, Z)
+        
+        self.a1 = nn.Linear(Z, Z)
         self.a2 = nn.Linear(Z, Z)
-        self.a3 = nn.Linear(Z, Z)
-        
-        self.b1 = nn.Linear(s_dim, Z)
-        self.b2 = nn.Linear(Z, Z)
-        self.b3 = nn.Linear(Z, Z)
-        
         self.mu = nn.Linear(Z, a_dim)
+        
+        self.b1 = nn.Linear(Z, Z)
+        self.b2 = nn.Linear(Z, Z)
         self.sigma = nn.Linear(Z, a_dim)
+        
 
         self.c1 = nn.Linear(s_dim, Z)
         self.c2 = nn.Linear(Z, Z)
         self.c3 = nn.Linear(Z, Z)
         self.v = nn.Linear(Z, 1)
         
-        set_init([self.a1, self.a2, self.a3, self.b1, self.b2, self.b3, self.mu, self.sigma, self.c1, self.c2, self.c3, self.v])
+        set_init([self.com, self.a1, self.a2, self.b1, self.b2, self.mu, self.sigma, self.c1, self.c2, self.c3, self.v])
         self.distribution = torch.distributions.Normal
 
     def forward(self, x):
-        a1 = torch.tanh(self.a1(x))
-        a2 = torch.tanh(self.a2(a1))
-        a3 = torch.tanh(self.a3(a2))
-        mu = SPAN * torch.tanh(self.mu(a3))
+        com = F.relu6(self.com(x))
+        
+        a1 = F.relu6(self.a1(com))
+        a2 = F.relu6(self.a2(a1))
+        mu = SPAN * torch.tanh(self.mu(a2))
 
-        b1 = torch.tanh(self.b1(x))
-        b2 = torch.tanh(self.b2(b1))
-        b3 = torch.tanh(self.b3(b2))
-        sigma = F.softplus(self.sigma(b3)) + DELTA # TODO Is delta necessary 
+        b1 = F.relu6(self.b1(com))
+        b2 = F.relu6(self.b2(b1))
+        sigma = F.softplus(self.sigma(b2)) + DELTA # TODO Is delta necessary 
 
-        c1 = torch.tanh(self.c1(x))
-        c2 = torch.tanh(self.c2(c1))
-        c3 = torch.tanh(self.c3(c2))
+        c1 = F.relu6(self.c1(x))
+        c2 = F.relu6(self.c2(c1))
+        c3 = F.relu6(self.c3(c2))
         values = self.v(c3)
         
         return mu, sigma, values

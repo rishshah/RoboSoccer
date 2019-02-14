@@ -130,13 +130,16 @@ class Environment(object):
             r = self.generate_reward(state, acc, gyr, action, time, is_fallen)  
             return s, r, self.time_up(time), None        
         
-        except (BrokenPipeError,ConnectionResetError):
+        except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, sturct.error):
             return None, 0, True, None
     
     def generate_reward(self, state, acc, gyr, action, time, is_fallen):
         sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
         # print(sim)
-        reward = 10 + sim
+        if sim is not None:
+            reward = 10 + sim
+        else:
+            reward = 0
         # if is_fallen:
         #     print('(generate_reward) fallen ', acc)
         #     reward -= 100000
@@ -165,7 +168,7 @@ class Environment(object):
                 self.count_reset = 0
         
         
-        except (ConnectionRefusedError, ConnectionResetError, socket.timeout, struct.error):
+        except (BrokenPipeError, ConnectionRefusedError, ConnectionResetError, socket.timeout, struct.error):
             self.cleanup()
             self.start_server()
             self.time = self.agent.initialize()            

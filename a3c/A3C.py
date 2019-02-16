@@ -15,7 +15,7 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 2
+NUM_THREADS = 3
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
@@ -26,9 +26,9 @@ env = Environment()
 N_S = env.state_dim
 N_A = env.action_dim
 
-Z = 100 # number of hidden nodes in each layer
-SPAN = 1 # in radians per sec
-DELTA = 0.0001 # minimum sigma
+Z = 200 # number of hidden nodes in each layer
+SPAN = 0.5 # in radians per sec
+DELTA = 0.001 # minimum sigma
 
 # modelName = 'upper_body+2legjoint.pt'
 # modelName = 'hand_opposite_net.pt'
@@ -37,7 +37,7 @@ DELTA = 0.0001 # minimum sigma
 modelName = 'int_net.pt'
 loadModel = False
 testModel = False
-learning_rate = 0.0002
+learning_rate = 0.0005
 
 is_gpu_available = torch.cuda.is_available()
 class Net(nn.Module):
@@ -67,14 +67,15 @@ class Net(nn.Module):
 
     def forward(self, x):
         com = F.relu6(self.com(x))
-        
         a1 = F.relu6(self.a1(com))
         a2 = F.relu6(self.a2(a1))
         mu = SPAN * torch.tanh(self.mu(a2))
+        # print("MU", self.mu(a1))
 
         b1 = F.relu6(self.b1(com))
         b2 = F.relu6(self.b2(b1))
         sigma = F.softplus(self.sigma(b2)) + DELTA # TODO Is delta necessary 
+        # print("SIGMA", self.sigma(b1))
 
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
@@ -126,6 +127,7 @@ class Worker(mp.Process):
         self.env = Environment(agent_port=agent_port, monitor_port=monitor_port)
 
     def run(self):
+        total_step = 1
         # For each episode
         while self.g_ep.value < MAX_EP:
             
@@ -137,6 +139,7 @@ class Worker(mp.Process):
             buffer_s, buffer_a, buffer_r = [], [], []
             ep_r = 0.
             s = self.env.reset()
+
             if is_gpu_available:
                 s = torch.from_numpy(s).float()
                 s = s.cuda()
@@ -166,27 +169,25 @@ class Worker(mp.Process):
                     s_ = torch.from_numpy(s_).float()
                     s_ = s_.cuda()
                 s = s_
-                
+                total_step += 1
+
                 # Early Termination
-                if done:
+                if done or t == MAX_EP_STEP-1:  
+                    # Update Global And Local Neural Nets After This Episode
+                    push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA, is_gpu_available)
+                    
+                    print("(MAX)",self.env.max_a)
+                    print("(MIN)",self.env.min_a)
+                    print("(DIFF)",self.env.max_a - self.env.min_a)
+                    print("(max_R)",self.env.max_r)
+                    print("(min_R)",self.env.min_r)
+                    print("(diff)",self.env.max_r - self.env.min_r)
+                    print("(Total_Reward)",ep_r)                    
+                    
+                    # Record the cumulative reward and update average
+                    buffer_s, buffer_a, buffer_r = [], [], []
+                    record(self.g_ep, self.g_ep_r, ep_r, self.res_queue, self.name)
                     break
-
-                # Terminate after MAX_EP_STEP
-                if t == MAX_EP_STEP:
-                    done = True
-
-            if done:  
-                # Reward Normalization
-                # r_mean = np.mean(buffer_r)
-                # buffer_r = (buffer_r - r_mean) / np.std(buffer_r)
-                
-                print("(Total_Reward)",ep_r)
-                
-                # Update Global And Local Neural Nets After This Episode
-                push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA, is_gpu_available)
-                # Record the cumulative reward and update average
-                buffer_s, buffer_a, buffer_r = [], [], []
-                record(self.g_ep, self.g_ep_r, ep_r, self.res_queue, self.name)
 
         self.res_queue.put(None)
  

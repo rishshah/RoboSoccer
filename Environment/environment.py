@@ -1,4 +1,4 @@
-import sys
+import sys, math
 import time
 import os
 import numpy as np
@@ -15,10 +15,10 @@ class Environment(object):
     # Global Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 7.9
+    SIMULATION_TIME = 4
 
     #Connection to Server and Motion Clip
-    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite_ow.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     
     # Server and Monitor
@@ -55,7 +55,11 @@ class Environment(object):
 
     DIM = len(STATE_KEYS)
     DEFAULT_ACTION = np.zeros(len(STATE_KEYS));
-    
+    DEFAULT_STATE_MIN = np.array([-120,-120, -5,-5, -10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])
+    DEFAULT_STATE_RANGE = np.array([150, 150, 5,5, 5,5,5, 150,15,15, 0.02,1,1, 2, 4])
+
+    DEFAULT_REWARD_MIN = -2
+    DEFAULT_REWARD_RANGE = 2
     #Server Restart Parameter
     MAX_COUNT = 50
 
@@ -84,6 +88,10 @@ class Environment(object):
         self.joints = [list(filter(None, c.split('\t'))) for c in content]
         
         self.motion = []
+        self.max_a = np.zeros(self.state_dim)
+        self.min_a = 100 * np.ones(self.state_dim)
+        self.max_r = 0
+        self.min_r = 100
         
     def map_action(self, action, sp=False):
         tmp = {}
@@ -112,14 +120,19 @@ class Environment(object):
                 f.write(" ".join(frame) + "\n")
 
     def demap_state(self, state, acc, gyr, pos, orr, velocities, time):
-        tmp = [state[s]/10.0 for s in self.STATE_KEYS]
-        tmp = tmp + list([5*v for v in velocities])
+        tmp = [state[s]for s in self.STATE_KEYS]
+        tmp = tmp + list(velocities)
         tmp = tmp + list(acc)
-        tmp = tmp + list([10*g for g in gyr])
-        tmp = tmp + list([6*p for p in pos])
-        tmp = tmp + [orr/10]
-        tmp = tmp + [(time - self.time)*2]          
-        return np.array(tmp)        
+        tmp = tmp + list(gyr)
+        tmp = tmp + list(pos)
+        tmp = tmp + [orr]
+        tmp = tmp + [time - self.time]  
+        tmp = np.array(tmp)
+        # Observation based Normalization (USING RANGE)
+        tmp = (tmp - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE
+        self.max_a = np.maximum(self.max_a, np.array(tmp))
+        self.min_a = np.minimum(self.min_a, np.array(tmp))        
+        return tmp         
 
     def step(self, action, sp=False):
         try:
@@ -130,22 +143,33 @@ class Environment(object):
             r = self.generate_reward(state, acc, gyr, action, time, is_fallen)  
             return s, r, self.time_up(time), None        
         
-        except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, sturct.error):
+        except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
     def generate_reward(self, state, acc, gyr, action, time, is_fallen):
         sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
-        # print(sim)
         if sim is not None:
             reward = 10 + sim
         else:
             reward = 0
+
+        # act_rew = 0
+        # for a in action:
+        #     if math.fabs(a) > 0.5:
+        #         act_rew += (math.fabs(a) - 0.5) ** 2
+        # act_rew = 500 * math.sqrt(act_rew)
+        # reward -= act_rew 
         # if is_fallen:
         #     print('(generate_reward) fallen ', acc)
         #     reward -= 100000
         # elif self.time_up(time):
         #     reward += 10000
-        return reward * 0.01
+        # print(sim, act_rew, reward)
+        reward = reward * 0.01
+        reward = (reward - self.DEFAULT_REWARD_MIN)/self.DEFAULT_REWARD_RANGE
+        self.min_r = min(reward, self.min_r)
+        self.max_r = max(reward, self.max_r)
+        return reward
 
     def reset(self):
         self.count_reset += 1

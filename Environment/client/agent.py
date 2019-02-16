@@ -117,7 +117,7 @@ class BaseAgent(SimSparkServer):
         self.synchronize()
         
         # Send entire message
-        print(self.cycle_message)
+        # print(self.cycle_message)
         self.send_message(self.cycle_message)
 
         return self._parse_preceptors(self.receive_message())

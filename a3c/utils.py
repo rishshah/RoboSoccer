@@ -5,6 +5,7 @@ Functions that use multiple times
 from torch import nn
 import torch
 import numpy as np
+import itertools
 
 
 def v_wrap(np_array, dtype=np.float32):
@@ -16,7 +17,7 @@ def v_wrap(np_array, dtype=np.float32):
 def set_init(layers):
     for layer in layers:
         nn.init.normal_(layer.weight, mean=0., std=0.1)
-        nn.init.constant_(layer.bias, 0.1)
+        nn.init.constant_(layer.bias, 0.)
 
 
 def push_and_pull(opt, lnet, gnet, done, s_, bs, ba, br, gamma, is_gpu_available):
@@ -47,6 +48,9 @@ def push_and_pull(opt, lnet, gnet, done, s_, bs, ba, br, gamma, is_gpu_available
             gp._grad = lp.grad
 
     opt.step()
+
+    # for param in lnet.parameters():
+    #     print(param.data)
 
     # pull global parameters
     lnet.load_state_dict(gnet.state_dict())

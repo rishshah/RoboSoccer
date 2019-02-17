@@ -15,10 +15,10 @@ class Environment(object):
     # Global Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 4
+    SIMULATION_TIME = 7.8
 
     #Connection to Server and Motion Clip
-    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite_ow.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/stand.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     
     # Server and Monitor
@@ -55,8 +55,8 @@ class Environment(object):
 
     DIM = len(STATE_KEYS)
     DEFAULT_ACTION = np.zeros(len(STATE_KEYS));
-    DEFAULT_STATE_MIN = np.array([-120,-120, -5,-5, -10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])
-    DEFAULT_STATE_RANGE = np.array([150, 150, 5,5, 5,5,5, 150,15,15, 0.02,1,1, 2, 4])
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(STATE_KEYS)) * -120, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(STATE_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, 4])])
 
     DEFAULT_REWARD_MIN = -2
     DEFAULT_REWARD_RANGE = 2
@@ -73,7 +73,7 @@ class Environment(object):
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
-        self.state_dim = self.DIM*2  + 11
+        self.state_dim = self.DIM*3  + 11
         self.action_dim = self.DIM
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
@@ -92,7 +92,8 @@ class Environment(object):
         self.min_a = 100 * np.ones(self.state_dim)
         self.max_r = 0
         self.min_r = 100
-        
+        self.prev_state = {}
+
     def map_action(self, action, sp=False):
         tmp = {}
         for i, s in enumerate(self.STATE_KEYS):
@@ -119,9 +120,10 @@ class Environment(object):
                 frame = [str(a) for a in frame]
                 f.write(" ".join(frame) + "\n")
 
-    def demap_state(self, state, acc, gyr, pos, orr, velocities, time):
+    def demap_state(self, state, acc, gyr, pos, orr, velocities, target, time):
         tmp = [state[s]for s in self.STATE_KEYS]
         tmp = tmp + list(velocities)
+        tmp = tmp + list(target)
         tmp = tmp + list(acc)
         tmp = tmp + list(gyr)
         tmp = tmp + list(pos)
@@ -134,42 +136,51 @@ class Environment(object):
         self.min_a = np.minimum(self.min_a, np.array(tmp))        
         return tmp         
 
+    def get_velocity(self, state):
+        if self.prev_state:
+            tmp = []
+            for s in self.STATE_KEYS:
+                tmp.append(state[s] - self.prev_state[s])
+            self.prev_state = state
+            return np.array(tmp)
+        else:
+            self.prev_state = state
+            return self.DEFAULT_ACTION 
+
     def step(self, action, sp=False):
         try:
             state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(self.map_action(action, sp))
             self.update_motion(state)
-
-            s = self.demap_state(state, acc, gyr, pos, orr, action, time)
-            r = self.generate_reward(state, acc, gyr, action, time, is_fallen)  
-            return s, r, self.time_up(time), None        
+            vel = self.get_velocity(state)
+            target, r = self.generate_reward(state, time, is_fallen)  
+            s = self.demap_state(state, acc, gyr, pos, orr, vel, target, time)
+            return s, r, is_fallen or self.time_up(time), None        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
-    def generate_reward(self, state, acc, gyr, action, time, is_fallen):
-        sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
-        if sim is not None:
-            reward = 10 + sim
-        else:
-            reward = 0
-
+    def generate_reward(self, state, time, is_fallen):
+        target, sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
         # act_rew = 0
         # for a in action:
         #     if math.fabs(a) > 0.5:
         #         act_rew += (math.fabs(a) - 0.5) ** 2
         # act_rew = 500 * math.sqrt(act_rew)
         # reward -= act_rew 
+        reward = sim * 0.0001
         # if is_fallen:
-        #     print('(generate_reward) fallen ', acc)
-        #     reward -= 100000
+        #     print('(generate_reward) fallen ', reward)
+        #     reward -= 5000 * np.exp(-(time - self.time))
         # elif self.time_up(time):
-        #     reward += 10000
-        # print(sim, act_rew, reward)
-        reward = reward * 0.01
-        reward = (reward - self.DEFAULT_REWARD_MIN)/self.DEFAULT_REWARD_RANGE
+        #     reward += 5000
+
+        # reward = (reward - self.DEFAULT_REWARD_MIN)/self.DEFAULT_REWARD_RANGE
         self.min_r = min(reward, self.min_r)
         self.max_r = max(reward, self.max_r)
-        return reward
+        tmp = []
+        for s in self.STATE_KEYS:
+            tmp.append(target[s])
+        return np.array(tmp), reward
 
     def reset(self):
         self.count_reset += 1

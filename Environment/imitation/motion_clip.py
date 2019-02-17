@@ -36,7 +36,7 @@ class MotionClip(object):
         target_pose = self.get_pose(time)
         if target_pose is not None:
             # print(target_pose)
-            return -1 * self.euclead_distance(actual_pose, target_pose, keys)
+            return target_pose, -1 * self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
@@ -44,4 +44,4 @@ class MotionClip(object):
             if x in keys:
                 # print(x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
-        return math.sqrt(ans) 
+        return ans

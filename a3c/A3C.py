@@ -19,7 +19,7 @@ NUM_THREADS = 3
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 GAMMA = 1
-MAX_EP = 2000 # Max episodes
+MAX_EP = 7000 # Max episodes
 MAX_EP_STEP = 500 # Max episode step
 
 env = Environment()
@@ -27,8 +27,8 @@ N_S = env.state_dim
 N_A = env.action_dim
 
 Z = 200 # number of hidden nodes in each layer
-SPAN = 0.5 # in radians per sec
-DELTA = 0.001 # minimum sigma
+# SPAN = 0.5 # in radians per sec
+# DELTA = 0.0001 # minimum sigma
 
 # modelName = 'upper_body+2legjoint.pt'
 # modelName = 'hand_opposite_net.pt'
@@ -37,7 +37,7 @@ DELTA = 0.001 # minimum sigma
 modelName = 'int_net.pt'
 loadModel = False
 testModel = False
-learning_rate = 0.0005
+learning_rate = 0.00001
 
 is_gpu_available = torch.cuda.is_available()
 class Net(nn.Module):
@@ -46,14 +46,11 @@ class Net(nn.Module):
         self.s_dim = s_dim
         self.a_dim = a_dim
         
-        self.com = nn.Linear(s_dim, Z)
+        self.com1 = nn.Linear(s_dim, Z)
+        self.com2 = nn.Linear(Z, Z)
+        self.com3 = nn.Linear(Z, Z)
         
-        self.a1 = nn.Linear(Z, Z)
-        self.a2 = nn.Linear(Z, Z)
         self.mu = nn.Linear(Z, a_dim)
-        
-        self.b1 = nn.Linear(Z, Z)
-        self.b2 = nn.Linear(Z, Z)
         self.sigma = nn.Linear(Z, a_dim)
         
 
@@ -62,20 +59,16 @@ class Net(nn.Module):
         self.c3 = nn.Linear(Z, Z)
         self.v = nn.Linear(Z, 1)
         
-        set_init([self.com, self.a1, self.a2, self.b1, self.b2, self.mu, self.sigma, self.c1, self.c2, self.c3, self.v])
+        set_init([self.com1, self.com2, self.com3, self.mu, self.sigma, self.c1, self.c2, self.c3, self.v])
         self.distribution = torch.distributions.Normal
 
     def forward(self, x):
-        com = F.relu6(self.com(x))
-        a1 = F.relu6(self.a1(com))
-        a2 = F.relu6(self.a2(a1))
-        mu = SPAN * torch.tanh(self.mu(a2))
-        # print("MU", self.mu(a1))
-
-        b1 = F.relu6(self.b1(com))
-        b2 = F.relu6(self.b2(b1))
-        sigma = F.softplus(self.sigma(b2)) + DELTA # TODO Is delta necessary 
-        # print("SIGMA", self.sigma(b1))
+        com1 = F.relu6(self.com1(x))
+        com2 = F.relu6(self.com2(com1))
+        com3 = F.relu6(self.com3(com2))
+        
+        mu = self.mu(com3)
+        sigma = F.softplus(self.sigma(com3)) 
 
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
@@ -176,12 +169,12 @@ class Worker(mp.Process):
                     # Update Global And Local Neural Nets After This Episode
                     push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA, is_gpu_available)
                     
-                    print("(MAX)",self.env.max_a)
-                    print("(MIN)",self.env.min_a)
-                    print("(DIFF)",self.env.max_a - self.env.min_a)
-                    print("(max_R)",self.env.max_r)
-                    print("(min_R)",self.env.min_r)
-                    print("(diff)",self.env.max_r - self.env.min_r)
+                    # print("(MAX)",self.env.max_a)
+                    # print("(MIN)",self.env.min_a)
+                    # print("(DIFF)",self.env.max_a - self.env.min_a)
+                    # print("(max_R)",self.env.max_r)
+                    # print("(min_R)",self.env.min_r)
+                    # print("(diff)",self.env.max_r - self.env.min_r)
                     print("(Total_Reward)",ep_r)                    
                     
                     # Record the cumulative reward and update average

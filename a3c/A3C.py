@@ -18,17 +18,14 @@ import copy
 NUM_THREADS = 3
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
-GAMMA = 1
-MAX_EP = 7000 # Max episodes
-MAX_EP_STEP = 500 # Max episode step
-
 env = Environment()
 N_S = env.state_dim
 N_A = env.action_dim
 
-Z = 200 # number of hidden nodes in each layer
-# SPAN = 0.5 # in radians per sec
-# DELTA = 0.0001 # minimum sigma
+GAMMA = 1
+MAX_EP = 3000
+MAX_EP_STEP = 500
+Z = 200 
 
 # modelName = 'upper_body+2legjoint.pt'
 # modelName = 'hand_opposite_net.pt'
@@ -111,22 +108,23 @@ class Worker(mp.Process):
         super(Worker, self).__init__()
         self.name = 'w%i' % name
         self.g_ep, self.g_ep_r, self.res_queue = global_ep, global_ep_r, res_queue
+        self.env = Environment(agent_port=agent_port, monitor_port=monitor_port)
         self.gnet, self.opt = gnet, opt
-        # self.lnet = copy.deepcopy(self.gnet) #TODO 
         self.lnet = Net(N_S, N_A)
+        
         if is_gpu_available:
             self.lnet = self.lnet.cuda()
             
-        self.env = Environment(agent_port=agent_port, monitor_port=monitor_port)
 
     def run(self):
-        total_step = 1
         # For each episode
         while self.g_ep.value < MAX_EP:
             
             # Save intermediate model
             if self.g_ep.value % 20 == 19:
                 torch.save(self.gnet, modelName)
+            if self.g_ep.value % 1000 == 999:
+                torch.save(self.gnet, "net_" + str(self.g_ep.value//1000) + '.pt')
 
             # Reset rewards, state
             buffer_s, buffer_a, buffer_r = [], [], []
@@ -154,27 +152,19 @@ class Worker(mp.Process):
                     buffer_a.append(a)
                     buffer_r.append(r)
                 else:
-                    done = False
                     break
                 
                 # Update new state
                 if is_gpu_available:
                     s_ = torch.from_numpy(s_).float()
                     s_ = s_.cuda()
+
                 s = s_
-                total_step += 1
 
                 # Early Termination
                 if done or t == MAX_EP_STEP-1:  
                     # Update Global And Local Neural Nets After This Episode
                     push_and_pull(self.opt, self.lnet, self.gnet, done, s_, buffer_s, buffer_a, buffer_r, GAMMA, is_gpu_available)
-                    
-                    # print("(MAX)",self.env.max_a)
-                    # print("(MIN)",self.env.min_a)
-                    # print("(DIFF)",self.env.max_a - self.env.min_a)
-                    # print("(max_R)",self.env.max_r)
-                    # print("(min_R)",self.env.min_r)
-                    # print("(diff)",self.env.max_r - self.env.min_r)
                     print("(Total_Reward)",ep_r)                    
                     
                     # Record the cumulative reward and update average
@@ -188,13 +178,18 @@ class Worker(mp.Process):
         self.env.cleanup()
 
 def test():
-    gnet = torch.load(modelName)
-    e = Environment()
-    s = e.reset()
-    for t in range(MAX_EP_STEP):
-        s, _, done, _ = e.step(gnet.choose_action(v_wrap(s[:])))    
-        # if done:
-        #   break   
+    try:
+        gnet = torch.load(modelName)
+        e = Environment()
+        s = e.reset()
+        for t in range(MAX_EP_STEP):
+            s, _, done, _ = e.step(gnet.choose_action(v_wrap(s[:])))  
+            if done: 
+                break  
+        e.cleanup()
+    
+    except(KeyboardInterrupt, SystemExit): 
+        e.cleanup()
 
 if __name__ == "__main__":
     try:
@@ -205,7 +200,6 @@ if __name__ == "__main__":
 
         if testModel:
             test()
-            env.cleanup()
             sys.exit()
 
         # Load Intermediate model
@@ -226,6 +220,7 @@ if __name__ == "__main__":
         
         # Train
         [w.start() for w in workers]
+    
         
         # Get moving averages from training
         res = []
@@ -242,16 +237,13 @@ if __name__ == "__main__":
         plt.plot(res)
         plt.ylabel('Moving average ep reward')
         plt.xlabel('Step')
-        # plt.show()
         plt.savefig("lc.png")
         
         #Cleanup
         for w in workers:
             w.cleanup()
-        env.cleanup()
         sys.exit()
 
     except(KeyboardInterrupt, SystemExit):
-        env.cleanup()
         sys.exit()
         

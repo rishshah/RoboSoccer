@@ -7,7 +7,7 @@ import sexpdata, math
 
 class BaseAgent(SimSparkServer):
     MODEL_PATH = "rsg/agent/nao/nao.rsg"  # Defaults to Nao model
-    FALLEN_PARAM = 8
+    FALLEN_PARAM = 6
     SPURIOUS_THRESHOLD = 20
     K = 0.9
     def __init__(self, teamname: str, player_number: int, host: str, port: int):
@@ -126,7 +126,7 @@ class BaseAgent(SimSparkServer):
         fallenUp = float(self.acc[0]) < -self.FALLEN_PARAM
         fallenDown = float(self.acc[0]) > self.FALLEN_PARAM
         fallenRight = float(self.acc[1]) < -self.FALLEN_PARAM
-        fallenLeft = float(self.acc[0]) >  self.FALLEN_PARAM
+        fallenLeft = float(self.acc[1]) >  self.FALLEN_PARAM
         return fallenUp or fallenDown or fallenRight or fallenLeft
     
     def filter_acc(self, acc):

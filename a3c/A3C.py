@@ -15,7 +15,7 @@ from Environment.environment import Environment
 import copy 
 
 # Global Variables and HyperParameters
-NUM_THREADS = 3
+NUM_THREADS = 2
 os.environ["OMP_NUM_THREADS"] = str(NUM_THREADS)
 
 env = Environment()
@@ -25,7 +25,7 @@ N_A = env.action_dim
 GAMMA = 1
 MAX_EP = 3000
 MAX_EP_STEP = 500
-Z = 200 
+Z = 250 
 
 # modelName = 'upper_body+2legjoint.pt'
 # modelName = 'hand_opposite_net.pt'
@@ -34,7 +34,7 @@ Z = 200
 modelName = 'int_net.pt'
 loadModel = False
 testModel = False
-learning_rate = 0.00001
+learning_rate = 0.00002
 
 is_gpu_available = torch.cuda.is_available()
 class Net(nn.Module):
@@ -45,8 +45,9 @@ class Net(nn.Module):
         
         self.com1 = nn.Linear(s_dim, Z)
         self.com2 = nn.Linear(Z, Z)
-        self.com3 = nn.Linear(Z, Z)
         
+        self.mu1 = nn.Linear(Z, Z)
+        self.sigma1 = nn.Linear(Z, Z)
         self.mu = nn.Linear(Z, a_dim)
         self.sigma = nn.Linear(Z, a_dim)
         
@@ -56,16 +57,18 @@ class Net(nn.Module):
         self.c3 = nn.Linear(Z, Z)
         self.v = nn.Linear(Z, 1)
         
-        set_init([self.com1, self.com2, self.com3, self.mu, self.sigma, self.c1, self.c2, self.c3, self.v])
+        set_init([self.com1, self.com2, self.mu1, self.sigma1, self.mu, self.sigma, self.c1, self.c2, self.c3, self.v])
         self.distribution = torch.distributions.Normal
 
     def forward(self, x):
         com1 = F.relu6(self.com1(x))
         com2 = F.relu6(self.com2(com1))
-        com3 = F.relu6(self.com3(com2))
         
-        mu = self.mu(com3)
-        sigma = F.softplus(self.sigma(com3)) 
+        mu1 = F.relu6(self.mu1(com2))
+        mu = self.mu(mu1)
+        
+        sigma1 = F.relu6(self.sigma1(com2))
+        sigma = F.softplus(self.sigma(sigma1)) 
 
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
@@ -74,10 +77,11 @@ class Net(nn.Module):
         
         return mu, sigma, values
 
-    def choose_action(self, s):
+    def choose_action(self, s, t = 0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        # print(mu, sigma)
+        if t % 20 == 0:
+            print(mu[0], sigma[0])
         if is_gpu_available:
             mu, sigma = mu.cuda(), sigma.cuda()
         
@@ -131,33 +135,25 @@ class Worker(mp.Process):
             ep_r = 0.
             s = self.env.reset()
 
-            if is_gpu_available:
-                s = torch.from_numpy(s).float()
-                s = s.cuda()
             # Simulate this episode
             for t in range(MAX_EP_STEP):
                 
                 # Sample action from model and step into environment
                 if is_gpu_available:
-                    a = self.lnet.choose_action(s)
+                    a = self.lnet.choose_action(torch.from_numpy(s).float().cuda(), t)
                 else:
-                    a = self.lnet.choose_action(v_wrap(s[:]))
+                    a = self.lnet.choose_action(v_wrap(s[:]), t)
 
                 s_, r, done, _ = self.env.step(a)
                 
                 # Collect Rewards, States, Actions for later
-                if s_ is not None:
+                if s is not None:
                     ep_r += r
-                    buffer_s.append(s_)
+                    buffer_s.append(s)
                     buffer_a.append(a)
                     buffer_r.append(r)
                 else:
                     break
-                
-                # Update new state
-                if is_gpu_available:
-                    s_ = torch.from_numpy(s_).float()
-                    s_ = s_.cuda()
 
                 s = s_
 
@@ -221,7 +217,7 @@ if __name__ == "__main__":
         # Train
         [w.start() for w in workers]
     
-        
+        print("HH1")
         # Get moving averages from training
         res = []
         while True:
@@ -239,6 +235,7 @@ if __name__ == "__main__":
         plt.xlabel('Step')
         plt.savefig("lc.png")
         
+        print("HH2")
         #Cleanup
         for w in workers:
             w.cleanup()

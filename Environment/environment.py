@@ -15,10 +15,10 @@ class Environment(object):
     # Global Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 7.8
+    SIMULATION_TIME = 3.8
 
     #Connection to Server and Motion Clip
-    MOTION_CLIP = CWD + "/imitation/debug/situps.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite_non_periodic.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     
     # Server and Monitor
@@ -32,7 +32,7 @@ class Environment(object):
     # Details of state and action parameters
     STATE_KEYS = [
         # Hands Opposite
-        # "lae1", "rae1",
+        "lae1", "rae1",
 
         # UpperBody + knees
         # "lle4", "rle4",
@@ -48,15 +48,15 @@ class Environment(object):
         # "rae1","rae2","rae3","rae4"
         
         # Situps
-        "lle5", "rle5",
-        "lle4", "rle4",
-        "lle3", "rle3",
+        # "lle5", "rle5",
+        # "lle4", "rle4",
+        # "lle3", "rle3s",
     ]
 
     A_DIM = len(STATE_KEYS)
     DEFAULT_ACTION = np.zeros(len(STATE_KEYS));
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(STATE_KEYS)) * -120, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(STATE_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, 4])])
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(STATE_KEYS)) * -80, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(STATE_KEYS)) * 80, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, 4])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -128,12 +128,11 @@ class Environment(object):
     
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
-        reward = sim * 0.0001
+        reward = sim * 0.001
         if is_fallen:
             print('(generate_reward) fallen ', time-self.time)
-            reward -= 5000 * np.exp(-(time - self.time))
-        elif self.time_up(time):
-            reward += 5000
+            reward -= 500 * np.exp(-(time - self.time)/10)
+        # print(reward)
         return np.array([target[s] for s in self.STATE_KEYS]), reward
 
     def reset(self):

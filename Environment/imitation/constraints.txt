@@ -13,7 +13,7 @@ RLeg		rle4	0		0
 RFoot		rle5	rle6	0
 Neck		0		he1		0
 Head		he2		0		0
-RUpperarm	lae1	0		lae2
-RLowerarm	0		lae3	lae4
-LUpperarm	rae1	0		rae2
-LLowerarm	0		rae3	rae4
+LUpperarm	lae1	0		lae2
+LLowerarm	0		lae3	lae4
+RUpperarm	rae1	0		rae2
+RLowerarm	0		rae3	rae4

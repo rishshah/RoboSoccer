@@ -12,16 +12,17 @@ if CWD == "":
     CWD = "."
 
 class Environment(object):
-    # Global Constants
+    # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
     SIMULATION_TIME = 4
 
-    #Connection to Server and Motion Clip
+    # Motion Clip Params
     MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
-    
-    # Server and Monitor
+    FRAME_TIME = 0.02
+
+    # Server and Monitor Params 
     A_PORT  = 3100
     M_PORT  = 3200
     A_HOST  = "localhost"
@@ -29,8 +30,8 @@ class Environment(object):
     MONITOR = "rcssmonitor3d"
     LD_LIBRARY_PATH = CWD + "/server/ld_library_path"
     
-    # Details of state and action parameters
-    STATE_KEYS = [
+    # Action params
+    ACTION_KEYS = [
         # Hands Opposite
         "lae1", "rae1",
 
@@ -53,12 +54,12 @@ class Environment(object):
         # "lle3", "rle3",
     ]
 
-    A_DIM = len(STATE_KEYS)
-    DEFAULT_ACTION = np.zeros(len(STATE_KEYS));
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(STATE_KEYS)) * -100, np.array([0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(STATE_KEYS)) * 100, np.array([4])])
-    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(STATE_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
-    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(STATE_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, 4])])
+    DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));
+    
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([4])])
+    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
+    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, self.FRAME_TIME,1,1, 100, 4])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -73,26 +74,27 @@ class Environment(object):
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
-        self.state_dim = self.A_DIM*3  + 1
-        self.action_dim = self.A_DIM
+        self.state_dim = len(ACTION_KEYS)*3  + 1
+        self.action_dim = len(ACTION_KEYS)
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
         self.motion_clip = MotionClip(mocap_file=motion_clip, constraints_file=self.CONSTRAINTS)
 
+        self.init_time = 0
         self.count_reset = 0
-        self.time = 0
-        self.xxtime = 0
+
+        # For saving handmade motions
         with open(self.CONSTRAINTS, 'r') as f:
             content = f.readlines()
         content = [x.strip() for x in content]
         self.joints = [list(filter(None, c.split('\t'))) for c in content]
-        
-        self.motion = []
-        self.prev_state = {}
+        self.motion = [] 
+
+        self.prev_state = {} # For velocities
    
     def get_velocity(self, state):
         if self.prev_state:
-            tmp = [state[s] - self.prev_state[s] for s in self.STATE_KEYS]
+            tmp = [state[s] - self.prev_state[s] for s in self.ACTION_KEYS]
             self.prev_state = state
             return np.array(tmp)
         else:
@@ -101,21 +103,20 @@ class Environment(object):
 
     def map_action(self, action):
         tmp = {}
-        for i, s in enumerate(self.STATE_KEYS):
+        for i, s in enumerate(self.ACTION_KEYS):
             tmp[s] = action[i]
-        # if int(math.fabs(self.xxtime - self.time)*3) % 10 == 0:  
         # print(tmp)
         return tmp
 
     def demap_state(self, state, acc, gyr, pos, orr, velocities, target, time):
-        tmp = [state[s]for s in self.STATE_KEYS]
+        tmp = [state[s]for s in self.ACTION_KEYS]
         tmp = tmp + list(velocities)
         tmp = tmp + list(target)
         # tmp = tmp + list(acc)
         # tmp = tmp + list(gyr)
         # tmp = tmp + list(pos)
         # tmp = tmp + [orr]
-        tmp = tmp + [time - self.time - 0.02]  
+        tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
         tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
         return tmp
 
@@ -125,31 +126,24 @@ class Environment(object):
             self.update_motion(state)
             target, r = self.generate_reward(state, time, is_fallen)  
             s = self.demap_state(state, acc, gyr, pos, orr, self.get_velocity(state), target, time)
-            self.xxtime = time
             
-            return s, r, is_fallen or self.time_up(time), None        
+            return s, r, is_fallen or self.init_time_up(time), None        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
     def generate_reward(self, state, time, is_fallen):
-        target, sim = self.motion_clip.similarity(time - self.time, state, self.STATE_KEYS)
-        # reward = 10 * np.exp(-0.001 * sim)
-        # reward = 10 * 1.0/(1 + 0.001 * sim)
+        target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
         reward = -0.0005 * sim
         # print("(generate_reward)", reward)
-        # print(reward)
         # if is_fallen:
-        #     print('(generate_reward) fallen ', time-self.time)
-        #     reward -= 1000 * np.exp(-(time - self.time)/20)
-        # print(reward)
-        # print("(generate_reward)", target)
-        return np.array([target[s] for s in self.STATE_KEYS]), reward
+        #     print('(generate_reward) fallen ', time-self.init_time)
+        #     reward -= 1000 * np.exp(-(time - self.init_time)/20)
+        return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def reset(self):
         self.count_reset += 1
         self.motion = []
-        self.xxtime = 0
         
         try:
             if self.count_reset == 1:
@@ -163,24 +157,21 @@ class Environment(object):
                 self.start_server()
                 self.count_reset = 0
         
-            self.time = self.agent.initialize()
+            self.init_time = self.agent.initialize()
         
         except (BrokenPipeError, ConnectionRefusedError, ConnectionResetError, socket.timeout, struct.error):
             self.cleanup()
             self.start_server()
-            self.time = self.agent.initialize()            
+            self.init_time = self.agent.initialize()            
 
-        # state, _, _, _ = self.step(action=self.DEFAULT_ACTION)
-        # print("(Reset)", state)
-        # print("(Reset)", type(state))
-        return np.concatenate([np.zeros(3*len(self.STATE_KEYS)), np.array([0])])
+        return np.concatenate([np.zeros(3*len(self.ACTION_KEYS)), np.array([0])])
         
     def cleanup(self):
         self.agent.disconnect()
         os.system("pkill -9 -f '{} --agent-port {} --server-port {}'".format(self.SERVER, self.agent_port, self.monitor_port));
 
     def time_up(self, time):
-        return (time - self.time) >= self.SIMULATION_TIME
+        return (time - self.init_time) >= self.SIMULATION_TIME
 
     def start_server(self):
         with open(self.LD_LIBRARY_PATH) as f:
@@ -204,7 +195,7 @@ class Environment(object):
     def save_motion(self, file):
         with open(file, 'a') as f:
             f.write("Frames: " + str(len(self.motion)) + "\n")    
-            f.write("Frame Time: 0.02\n")    
+            f.write("Frame Time: self.FRAME_TIME\n")    
             for frame in self.motion:
                 frame = [str(a) for a in frame]
                 f.write(" ".join(frame) + "\n")
@@ -253,7 +244,7 @@ if __name__ == "__main__":
     for i in range(1,100):
         env.step(action);
 
-    env.save_motion("./imitation/debug/hands_opposite_tmp1.bvh")
+    env.save_motion("./imitation/debug/hands_opposite.bvh")
 
     # env = Environment()
     # env.reset()

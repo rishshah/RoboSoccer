@@ -1,0 +1,67 @@
+
+SIMULATION_TIME = 3.8    
+MOTION_CLIP = CWD + "/imitation/debug/hands_opposite_non_periodic.bvh"
+
+    def generate_reward(self, state, time, is_fallen):
+        target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
+        reward = -0.0005 * sim
+        # print("(generate_reward)", reward)
+        # if is_fallen:
+        #     print('(generate_reward) fallen ', time-self.init_time)
+        #     reward -= 1000 * np.exp(-(time - self.init_time)/20)
+        return np.array([target[s] for s in self.ACTION_KEYS]), reward
+
+os.environ["OMP_NUM_THREADS"] = "4"
+
+# Training Hyperparameters
+UPDATE_GLOBAL_ITER = 50
+GAMMA = 0.95
+MAX_EP = 10000
+MAX_EP_STEP = 200
+LEARNING_RATE = 0.0001
+NUM_WORKERS = mp.cpu_count()
+
+# Model IO Parameters
+MODEL_NAME = "int_net"
+LOAD_MODEL = False
+TEST_MODEL = False
+
+# Neural Network Architecture Variables
+ENV_DUMMY = Environment()
+N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
+Z1 = 200
+Z2 = 100
+MU_SPAN = 2
+
+
+    def __init__(self, s_dim, a_dim):
+        super(Net, self).__init__()
+        self.s_dim = s_dim
+        self.a_dim = a_dim
+        self.a1 = nn.Linear(s_dim, Z1)
+        self.mu = nn.Linear(Z1, a_dim)
+        self.sigma = nn.Linear(Z1, a_dim)
+        self.c1 = nn.Linear(s_dim, Z2)
+        self.v = nn.Linear(Z2, 1)
+        set_init([self.a1, self.mu, self.sigma, self.c1, self.v])
+        self.distribution = torch.distributions.Normal
+
+    def forward(self, x):
+        a1 = F.relu6(self.a1(x))
+        mu = MU_SPAN * torch.tanh(self.mu(a1))
+        sigma = F.softplus(self.sigma(a1))
+        c1 = F.relu6(self.c1(x))
+        values = self.v(c1)
+        return mu, sigma, values
+
+    def demap_state(self, state, acc, gyr, pos, orr, velocities, target, time):
+        tmp = [state[s]for s in self.ACTION_KEYS]
+        tmp = tmp + list(velocities)
+        tmp = tmp + list(target)
+        # tmp = tmp + list(acc)
+        # tmp = tmp + list(gyr)
+        # tmp = tmp + list(pos)
+        # tmp = tmp + [orr]
+        tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
+        tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
+        return tmp

@@ -63,7 +63,7 @@ class Net(nn.Module):
         self.training = False
         mu, sigma, _ = self.forward(s)
         if(t % 30 == 0):
-            print(mu[0], sigma[0])
+            print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
             return mu.detach().numpy()
@@ -140,7 +140,7 @@ class Worker(mp.Process):
 
 def test():
     try:
-        gnet = torch.load(MODEL_NAME)
+        gnet = torch.load(MODEL_NAME + ".pt")
         s = ENV_DUMMY.reset()
         for t in range(MAX_EP_STEP):
             s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1))  
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         sys.exit()
 
     if LOAD_MODEL:
-        gnet = torch.load(MODEL_NAME)
+        gnet = torch.load(MODEL_NAME + ".pt")
     else:
         gnet = Net(N_S, N_A)
 

@@ -15,7 +15,7 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 4
+    SIMULATION_TIME = 2
 
     # Motion Clip Params
     MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
@@ -33,7 +33,7 @@ class Environment(object):
     # Action params
     ACTION_KEYS = [
         # Hands Opposite
-        "lae1", "rae1",
+        # "lae1", "rae1",
 
         # UpperBody + knees
         # "lle4", "rle4",
@@ -42,11 +42,11 @@ class Environment(object):
         # "rae1","rae2","rae3","rae4"
         
         # Stand
-        # "lle1","lle2","lle3","lle4","lle5","lle6",
-        # "rle1","rle2","rle3","rle4","rle5","rle6",
-        # "he1","he2",
-        # "lae1","lae2","lae3","lae4",
-        # "rae1","rae2","rae3","rae4"
+        "lle1","lle2","lle3","lle4","lle5","lle6",
+        "rle1","rle2","rle3","rle4","rle5","rle6",
+        "he1","he2",
+        "lae1","lae2","lae3","lae4",
+        "rae1","rae2","rae3","rae4"
         
         # Situps
         # "lle5", "rle5",
@@ -54,12 +54,9 @@ class Environment(object):
         # "lle3", "rle3",
     ]
 
-    DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));
-    
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([4])])
-    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
-    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, self.FRAME_TIME,1,1, 100, 4])])
+    DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));    
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, SIMULATION_TIME])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -74,8 +71,8 @@ class Environment(object):
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
-        self.state_dim = len(ACTION_KEYS)*3  + 1
-        self.action_dim = len(ACTION_KEYS)
+        self.state_dim = len(self.ACTION_KEYS)*3  + 11
+        self.action_dim = len(self.ACTION_KEYS)
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
         self.motion_clip = MotionClip(mocap_file=motion_clip, constraints_file=self.CONSTRAINTS)
@@ -112,10 +109,10 @@ class Environment(object):
         tmp = [state[s]for s in self.ACTION_KEYS]
         tmp = tmp + list(velocities)
         tmp = tmp + list(target)
-        # tmp = tmp + list(acc)
-        # tmp = tmp + list(gyr)
-        # tmp = tmp + list(pos)
-        # tmp = tmp + [orr]
+        tmp = tmp + list(acc)
+        tmp = tmp + list(gyr)
+        tmp = tmp + list(pos)
+        tmp = tmp + [orr]
         tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
         tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
         return tmp
@@ -127,7 +124,7 @@ class Environment(object):
             target, r = self.generate_reward(state, time, is_fallen)  
             s = self.demap_state(state, acc, gyr, pos, orr, self.get_velocity(state), target, time)
             
-            return s, r, is_fallen or self.init_time_up(time), None        
+            return s, r, is_fallen or self.time_up(time), None        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
@@ -164,7 +161,7 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        return np.concatenate([np.zeros(3*len(self.ACTION_KEYS)), np.array([0])])
+        return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()

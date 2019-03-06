@@ -41,6 +41,6 @@ class MotionClip(object):
         ans = 0
         for x in b.keys():
             if x in keys:
-                print(x, a[x], b[x])
+                # print(x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

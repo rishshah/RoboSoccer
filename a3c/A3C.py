@@ -21,8 +21,8 @@ from Environment.environment import Environment
 os.environ["OMP_NUM_THREADS"] = "4"
 
 UPDATE_GLOBAL_ITER = 50
-GAMMA = 0.9
-MAX_EP = 15000
+GAMMA = 0.95
+MAX_EP = 10000
 MAX_EP_STEP = 200
 
 env = Environment()
@@ -31,8 +31,8 @@ N_A = env.action_dim
 # env = gym.make('Pendulum-v0')
 # N_S = env.observation_space.shape[0]
 # N_A = env.action_space.shape[0]
-Z1 = 400
-Z2 = 200
+Z1 = 200
+Z2 = 100
 
 class Net(nn.Module):
     def __init__(self, s_dim, a_dim):
@@ -49,8 +49,8 @@ class Net(nn.Module):
 
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
-        mu = self.mu(a1)
-        sigma = F.softplus(self.sigma(a1)) + 0.001      # avoid 0
+        mu = 2 * torch.tanh(self.mu(a1))
+        sigma = F.softplus(self.sigma(a1))
         c1 = F.relu6(self.c1(x))
         values = self.v(c1)
         return mu, sigma, values
@@ -133,7 +133,9 @@ if __name__ == "__main__":
     # parallel training
     agent_port = 3100
     monitor_port = 3200
-    workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(mp.cpu_count())]
+    # X = mp.cpu_count()
+    X = 1
+    workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(X)]
     [w.start() for w in workers]
     res = []                    # record episode reward to plot
     while True:

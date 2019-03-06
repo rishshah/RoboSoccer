@@ -35,12 +35,12 @@ class MotionClip(object):
     def similarity(self, time, actual_pose, keys):
         target_pose = self.get_pose(time)
         if target_pose is not None:
-            return target_pose, self.euclead_distance(actual_pose, target_pose, keys)
+            return self.get_pose(time+0.02), self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
         for x in b.keys():
             if x in keys:
-                # print(x, a[x], b[x])
+                print(x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

@@ -18,7 +18,7 @@ class Environment(object):
     SIMULATION_TIME = 2
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/stand.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     FRAME_TIME = 0.02
 
@@ -36,17 +36,17 @@ class Environment(object):
         # "lae1", "rae1",
 
         # UpperBody + knees
-        # "lle4", "rle4",
-        # "he1","he2",
-        # "lae1","lae2","lae3","lae4",
-        # "rae1","rae2","rae3","rae4"
-        
-        # Stand
-        "lle1","lle2","lle3","lle4","lle5","lle6",
-        "rle1","rle2","rle3","rle4","rle5","rle6",
+        "lle4", "rle4",
         "he1","he2",
         "lae1","lae2","lae3","lae4",
         "rae1","rae2","rae3","rae4"
+        
+        # Stand
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "rle1","rle2","rle3","rle4","rle5","rle6",
+        # "he1","he2",
+        # "lae1","lae2","lae3","lae4",
+        # "rae1","rae2","rae3","rae4"
         
         # Situps
         # "lle5", "rle5",
@@ -55,8 +55,10 @@ class Environment(object):
     ]
 
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));    
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, SIMULATION_TIME])])
+    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
+    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, SIMULATION_TIME])])
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -71,7 +73,7 @@ class Environment(object):
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
-        self.state_dim = len(self.ACTION_KEYS)*3  + 11
+        self.state_dim = len(self.ACTION_KEYS)*3  + 1
         self.action_dim = len(self.ACTION_KEYS)
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
@@ -109,10 +111,10 @@ class Environment(object):
         tmp = [state[s]for s in self.ACTION_KEYS]
         tmp = tmp + list(velocities)
         tmp = tmp + list(target)
-        tmp = tmp + list(acc)
-        tmp = tmp + list(gyr)
-        tmp = tmp + list(pos)
-        tmp = tmp + [orr]
+        # tmp = tmp + list(acc)
+        # tmp = tmp + list(gyr)
+        # tmp = tmp + list(pos)
+        # tmp = tmp + [orr]
         tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
         tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
         return tmp

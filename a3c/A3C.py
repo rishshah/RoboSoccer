@@ -13,7 +13,7 @@ sys.path.append('../')
 sys.path.append('../Environment')
 from Environment.environment import Environment
 
-os.environ["OMP_NUM_THREADS"] = "4"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 # Training Hyperparameters
 UPDATE_GLOBAL_ITER = 50
@@ -33,7 +33,7 @@ ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
 Z1 = 200
 Z2 = 100
-MU_SPAN = 2
+MU_SPAN = 1
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -44,25 +44,29 @@ class Net(nn.Module):
         self.s_dim = s_dim
         self.a_dim = a_dim
         self.a1 = nn.Linear(s_dim, Z1)
-        self.mu = nn.Linear(Z1, a_dim)
-        self.sigma = nn.Linear(Z1, a_dim)
-        self.c1 = nn.Linear(s_dim, Z2)
+        self.a2 = nn.Linear(Z1, Z2)
+        self.mu = nn.Linear(Z2, a_dim)
+        self.sigma = nn.Linear(Z2, a_dim)
+        self.c1 = nn.Linear(s_dim, Z1)
+        self.c2 = nn.Linear(Z1, Z2)
         self.v = nn.Linear(Z2, 1)
-        set_init([self.a1, self.mu, self.sigma, self.c1, self.v])
+        set_init([self.a1, self.a2, self.mu, self.sigma, self.c1, self.c2, self.v])
         self.distribution = torch.distributions.Normal
 
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
-        mu = MU_SPAN * torch.tanh(self.mu(a1))
-        sigma = F.softplus(self.sigma(a1))
+        a2 = F.relu6(self.a2(a1))
+        mu = MU_SPAN * torch.tanh(self.mu(a2))
+        sigma = F.softplus(self.sigma(a2))
         c1 = F.relu6(self.c1(x))
-        values = self.v(c1)
+        c2 = F.relu6(self.c2(c1))
+        values = self.v(c2)
         return mu, sigma, values
 
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        if(t % 30 == 0):
+        if(t % 20 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
@@ -116,7 +120,7 @@ class Worker(mp.Process):
                     #     a = self.lnet.choose_action(torch.from_numpy(s).float().cuda(), t)
                     # else:
                     #     a = self.lnet.choose_action(v_wrap(s[:]), t)
-                    s_, r, done, _ = self.env.step(a)
+                    s_, r, done, _ = self.env.step(a.clip(-MU_SPAN, MU_SPAN))
 
                     if t == MAX_EP_STEP - 1:
                         done = True
@@ -134,9 +138,11 @@ class Worker(mp.Process):
                     s = s_
             
             self.res_queue.put(None)
+            self.env.cleanup()
         
         except(KeyboardInterrupt):
             self.res_queue.put(None)
+            self.env.cleanup()
 
 def test():
     try:

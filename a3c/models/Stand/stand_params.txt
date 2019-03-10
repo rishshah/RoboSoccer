@@ -8,7 +8,7 @@ LEARNING_RATE = 0.0003
 NUM_WORKERS = mp.cpu_count()
 
 # Model IO Parameters
-MODEL_NAME = "sup"
+MODEL_NAME = "stand_net"
 LOAD_MODEL = False
 TEST_MODEL = False
 

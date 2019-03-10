@@ -18,13 +18,13 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # Training Hyperparameters
 UPDATE_GLOBAL_ITER = 50
 GAMMA = 0.99
-MAX_EP = 5000
+MAX_EP = 15000
 MAX_EP_STEP = 200
 LEARNING_RATE = 0.0003
 NUM_WORKERS = 7#mp.cpu_count()
 
 # Model IO Parameters
-MODEL_NAME = "sup"
+MODEL_NAME = "sup_net"
 LOAD_MODEL = True
 TEST_MODEL = False
 

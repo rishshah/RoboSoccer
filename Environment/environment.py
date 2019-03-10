@@ -15,10 +15,10 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 1.5
+    SIMULATION_TIME = 4
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/debug/stand.bvh"
+    MOTION_CLIP = CWD + "/imitation/debug/situps.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     FRAME_TIME = 0.04
 
@@ -42,23 +42,25 @@ class Environment(object):
         # "rae1","rae2","rae3","rae4"
         
         # Stand
-        "lle1","lle2","lle3","lle4","lle5","lle6",
-        "rle1","rle2","rle3","rle4","rle5","rle6",
-        "he1","he2",
-        "lae1","lae2","lae3","lae4",
-        "rae1","rae2","rae3","rae4"
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "rle1","rle2","rle3","rle4","rle5","rle6",
+        # "he1","he2",
+        # "lae1","lae2","lae3","lae4",
+        # "rae1","rae2","rae3","rae4"
         
         # Situps
-        # "lle5", "rle5",
-        # "lle4", "rle4",
-        # "lle3", "rle3",
+        "lle5", "rle5",
+        "lle4", "rle4",
+        "lle3", "rle3",
     ]
 
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));    
-    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
-    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, SIMULATION_TIME])])
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([SIMULATION_TIME])])
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([-10,-10,-10, -160,-15,-15, 0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([5,5,5, 100,100,100, SIMULATION_TIME])])
+    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
+    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([5,5,5, 100,100,100, 0.02,1,1, 100, SIMULATION_TIME])])
+    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([0])])
+    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -73,7 +75,7 @@ class Environment(object):
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
-        self.state_dim = len(self.ACTION_KEYS)*3  + 1
+        self.state_dim = len(self.ACTION_KEYS)*3  + 7
         self.action_dim = len(self.ACTION_KEYS)
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
@@ -111,8 +113,8 @@ class Environment(object):
         tmp = [state[s]for s in self.ACTION_KEYS]
         tmp = tmp + list(velocities)
         tmp = tmp + list(target)
-        # tmp = tmp + list(acc)
-        # tmp = tmp + list(gyr)
+        tmp = tmp + list(acc)
+        tmp = tmp + list(gyr)
         # tmp = tmp + list(pos)
         # tmp = tmp + [orr]
         tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
@@ -126,18 +128,19 @@ class Environment(object):
             target, r = self.generate_reward(state, time, is_fallen)  
             s = self.demap_state(state, acc, gyr, pos, orr, self.get_velocity(state), target, time)
             
-            return s, r, is_fallen or self.time_up(time), None        
+            return s, r, self.time_up(time), None        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
-        reward = -0.005 * sim
+        reward = -0.002 * sim
         # print("(generate_reward)", reward)
-        if is_fallen:
-            print('(generate_reward) fallen ', time-self.init_time)
-            reward -= 2000
+        # if is_fallen:
+        #     print('(generate_reward) fallen ', time-self.init_time)
+        #     reward -= 1000 * (1 - (time-self.init_time)/self.SIMULATION_TIME)
+        # print("TARGET:", target)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def reset(self):

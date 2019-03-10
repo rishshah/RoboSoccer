@@ -18,21 +18,21 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # Training Hyperparameters
 UPDATE_GLOBAL_ITER = 50
 GAMMA = 0.99
-MAX_EP = 10000
-MAX_EP_STEP = 100
+MAX_EP = 5000
+MAX_EP_STEP = 200
 LEARNING_RATE = 0.0003
-NUM_WORKERS = mp.cpu_count()
+NUM_WORKERS = 7#mp.cpu_count()
 
 # Model IO Parameters
-MODEL_NAME = "stand"
-LOAD_MODEL = False
+MODEL_NAME = "sup"
+LOAD_MODEL = True
 TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 100
-Z2 = 80
+Z1 = 200
+Z2 = 100
 MU_SPAN = 1
 
 # Gpu use flag

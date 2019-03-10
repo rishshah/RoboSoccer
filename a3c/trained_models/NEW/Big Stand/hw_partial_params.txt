@@ -1,6 +1,6 @@
 
-SIMULATION_TIME = 4    
-MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
+SIMULATION_TIME = 3.8    
+MOTION_CLIP = CWD + "/imitation/debug/hands_opposite_non_periodic.bvh"
 
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)

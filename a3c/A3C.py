@@ -17,22 +17,22 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 # Training Hyperparameters
 UPDATE_GLOBAL_ITER = 50
-GAMMA = 0.95
+GAMMA = 0.99
 MAX_EP = 10000
-MAX_EP_STEP = 200
-LEARNING_RATE = 0.0001
+MAX_EP_STEP = 100
+LEARNING_RATE = 0.0003
 NUM_WORKERS = mp.cpu_count()
 
 # Model IO Parameters
-MODEL_NAME = "int_net"
+MODEL_NAME = "stand"
 LOAD_MODEL = False
 TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 200
-Z2 = 100
+Z1 = 100
+Z2 = 80
 MU_SPAN = 1
 
 # Gpu use flag
@@ -56,7 +56,8 @@ class Net(nn.Module):
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
         a2 = F.relu6(self.a2(a1))
-        mu = MU_SPAN * torch.tanh(self.mu(a2))
+        # mu = MU_SPAN * torch.tanh(self.mu(a2))
+        mu = self.mu(a2)
         sigma = F.softplus(self.sigma(a2))
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
@@ -69,8 +70,8 @@ class Net(nn.Module):
         if(t % 20 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
-        if t == -1:
-            return mu.detach().numpy()
+        # if t == -1:
+        #     return mu.detach().numpy()
         return m.sample().numpy()
 
     def loss_func(self, s, a, v_t):
@@ -120,7 +121,7 @@ class Worker(mp.Process):
                     #     a = self.lnet.choose_action(torch.from_numpy(s).float().cuda(), t)
                     # else:
                     #     a = self.lnet.choose_action(v_wrap(s[:]), t)
-                    s_, r, done, _ = self.env.step(a.clip(-MU_SPAN, MU_SPAN))
+                    s_, r, done, _ = self.env.step(a)
 
                     if t == MAX_EP_STEP - 1:
                         done = True

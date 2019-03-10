@@ -3,7 +3,7 @@ sys.path.append('../')
 
 from server.simspark_server import SimSparkServer
 import client.effectors as ef
-import sexpdata, math
+import sexpdata, math, time
 
 class BaseAgent(SimSparkServer):
     MODEL_PATH = "rsg/agent/nao/nao.rsg"  # Defaults to Nao model
@@ -29,6 +29,7 @@ class BaseAgent(SimSparkServer):
         self.state = {}
         self.pos = [0,0,0]
         self.orr = 0
+        self.first_time_discard = True
 
     # Commands
     def synchronize(self):
@@ -102,10 +103,10 @@ class BaseAgent(SimSparkServer):
         self.time = 0
         self.gyr  = [0,0,0]
         self.state = {}
+        self.first_time_discard = True
 
-        _, _, _, _, _, time, _, = self._parse_preceptors(self.receive_message())
-        return time    
-
+        _,_,_,_,_,time,_ = self._parse_preceptors(self.receive_message())
+        return time
     def step(self, action):
         # Reset message
         self.cycle_message = ""
@@ -119,9 +120,18 @@ class BaseAgent(SimSparkServer):
         # Send entire message
         # print(self.cycle_message)
         self.send_message(self.cycle_message)
-
-        return self._parse_preceptors(self.receive_message())
-
+        self._parse_preceptors(self.receive_message())
+        
+        self.cycle_message = ""
+        
+        for joint, angle in action.items():
+            self.set_hinge_joint(name=joint, axis1_speed=0)
+            
+        # Append sync message
+        self.synchronize()
+        self.send_message(self.cycle_message)
+        x = self._parse_preceptors(self.receive_message())
+        return x
     def is_fallen(self):
         fallenUp = float(self.acc[0]) < -self.FALLEN_PARAM
         fallenDown = float(self.acc[0]) > self.FALLEN_PARAM

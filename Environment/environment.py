@@ -15,12 +15,12 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 2
+    SIMULATION_TIME = 1.5
 
     # Motion Clip Params
     MOTION_CLIP = CWD + "/imitation/debug/stand.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
-    FRAME_TIME = 0.02
+    FRAME_TIME = 0.04
 
     # Server and Monitor Params 
     A_PORT  = 3100
@@ -36,17 +36,17 @@ class Environment(object):
         # "lae1", "rae1",
 
         # UpperBody + knees
-        "lle4", "rle4",
-        "he1","he2",
-        "lae1","lae2","lae3","lae4",
-        "rae1","rae2","rae3","rae4"
-        
-        # Stand
-        # "lle1","lle2","lle3","lle4","lle5","lle6",
-        # "rle1","rle2","rle3","rle4","rle5","rle6",
+        # "lle4", "rle4",
         # "he1","he2",
         # "lae1","lae2","lae3","lae4",
         # "rae1","rae2","rae3","rae4"
+        
+        # Stand
+        "lle1","lle2","lle3","lle4","lle5","lle6",
+        "rle1","rle2","rle3","rle4","rle5","rle6",
+        "he1","he2",
+        "lae1","lae2","lae3","lae4",
+        "rae1","rae2","rae3","rae4"
         
         # Situps
         # "lle5", "rle5",
@@ -57,8 +57,8 @@ class Environment(object):
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));    
     # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
     # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([5,5,5, 150,150,150, 0.02,1,1, 100, SIMULATION_TIME])])
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -100, np.array([0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 100, np.array([SIMULATION_TIME])])
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -133,11 +133,11 @@ class Environment(object):
     
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
-        reward = -0.0005 * sim
+        reward = -0.005 * sim
         # print("(generate_reward)", reward)
-        # if is_fallen:
-        #     print('(generate_reward) fallen ', time-self.init_time)
-        #     reward -= 1000 * np.exp(-(time - self.init_time)/20)
+        if is_fallen:
+            print('(generate_reward) fallen ', time-self.init_time)
+            reward -= 2000
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def reset(self):

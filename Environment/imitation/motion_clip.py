@@ -21,7 +21,7 @@ class MotionClip(object):
 
     def get_pose(self, time:float):
         pose = {}
-        frame = int(round(time / self.mocap.frame_time)) 
+        frame = math.floor(time / self.mocap.frame_time) - 1
         if frame >= self.mocap.nframes:
             return None
 

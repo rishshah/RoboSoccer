@@ -1,10 +1,10 @@
 
-SIMULATION_TIME = 7.8    
+SIMULATION_TIME = 3.8    
 MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
 
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
-        reward = -0.0005 * sim
+        reward = -0.001 * sim
         # print("(generate_reward)", reward)
         # if is_fallen:
         #     print('(generate_reward) fallen ', time-self.init_time)
@@ -15,11 +15,11 @@ os.environ["OMP_NUM_THREADS"] = "4"
 
 # Training Hyperparameters
 UPDATE_GLOBAL_ITER = 50
-GAMMA = 0.95
-MAX_EP = 10000
-MAX_EP_STEP = 200
+GAMMA = 1
+MAX_EP = 20000
+MAX_EP_STEP = 4000
 LEARNING_RATE = 0.0001
-NUM_WORKERS = mp.cpu_count()
+NUM_WORKERS = 4#mp.cpu_count()
 
 # Model IO Parameters
 MODEL_NAME = "int_net"
@@ -29,8 +29,8 @@ TEST_MODEL = False
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 200
-Z2 = 100
+Z1 = 100
+Z2 = 80
 MU_SPAN = 2
 
 

@@ -1,5 +1,6 @@
 import sys
 import torch
+import numpy as np
 import torch.nn as nn
 from utils import v_wrap, set_init, push_and_pull, record
 import torch.nn.functional as F
@@ -8,32 +9,31 @@ from shared_adam import SharedAdam
 import gym
 import math, os
 import matplotlib.pyplot as plt
-
 sys.path.append('../')
 sys.path.append('../Environment')
 from Environment.environment import Environment
 
-os.environ["OMP_NUM_THREADS"] = "1"
+# os.environ["OMP_NUM_THREADS"] = "100"
 
 # Training Hyperparameters
-UPDATE_GLOBAL_ITER = 50
-GAMMA = 0.99
-MAX_EP = 15000
-MAX_EP_STEP = 200
-LEARNING_RATE = 0.0003
-NUM_WORKERS = 7#mp.cpu_count()
+# UPDATE_GLOBAL_ITER = 50
+GAMMA = 1
+MAX_EP = 20000
+MAX_EP_STEP = 100
+LEARNING_RATE = 0.0001
+NUM_WORKERS = 4#mp.cpu_count()
 
 # Model IO Parameters
-MODEL_NAME = "sup_net"
-LOAD_MODEL = True
-TEST_MODEL = False
+MODEL_NAME = "hw_start1"
+LOAD_MODEL = False
+TEST_MODEL = True
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 200
-Z2 = 100
-MU_SPAN = 1
+Z1 = 100
+Z2 = 80
+# MU_SPAN = 1
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -70,8 +70,8 @@ class Net(nn.Module):
         if(t % 20 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
-        # if t == -1:
-        #     return mu.detach().numpy()
+        if t == -1:
+            return mu.detach().numpy()
         return m.sample().numpy()
 
     def loss_func(self, s, a, v_t):
@@ -151,8 +151,8 @@ def test():
         s = ENV_DUMMY.reset()
         for t in range(MAX_EP_STEP):
             s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1))  
-            if done: 
-                break  
+            if done:
+                s = np.array([0,0,0,0,0])
         ENV_DUMMY.cleanup()
     
     except(KeyboardInterrupt): 
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 3100
-    monitor_port = 3200
+    agent_port = 3300
+    monitor_port = 3400
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

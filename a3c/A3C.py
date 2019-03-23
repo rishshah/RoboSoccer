@@ -13,27 +13,25 @@ sys.path.append('../')
 sys.path.append('../Environment')
 from Environment.environment import Environment
 
-# os.environ["OMP_NUM_THREADS"] = "100"
+os.environ["OMP_NUM_THREADS"] = "4"
 
 # Training Hyperparameters
-# UPDATE_GLOBAL_ITER = 50
 GAMMA = 1
 MAX_EP = 20000
-MAX_EP_STEP = 100
+MAX_EP_STEP = 150
 LEARNING_RATE = 0.0001
-NUM_WORKERS = 4#mp.cpu_count()
+NUM_WORKERS = 4
 
 # Model IO Parameters
-MODEL_NAME = "hw_start1"
+MODEL_NAME = "wave"
 LOAD_MODEL = False
-TEST_MODEL = True
+TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 100
-Z2 = 80
-# MU_SPAN = 1
+Z1 = 200
+Z2 = 100
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -56,7 +54,6 @@ class Net(nn.Module):
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
         a2 = F.relu6(self.a2(a1))
-        # mu = MU_SPAN * torch.tanh(self.mu(a2))
         mu = self.mu(a2)
         sigma = F.softplus(self.sigma(a2))
         c1 = F.relu6(self.c1(x))
@@ -121,7 +118,7 @@ class Worker(mp.Process):
                     #     a = self.lnet.choose_action(torch.from_numpy(s).float().cuda(), t)
                     # else:
                     #     a = self.lnet.choose_action(v_wrap(s[:]), t)
-                    s_, r, done, _ = self.env.step(a)
+                    s_, r, done, _ = self.env.step(a, self.g_ep.value)
 
                     if t == MAX_EP_STEP - 1:
                         done = True
@@ -150,7 +147,7 @@ def test():
         gnet = torch.load(MODEL_NAME + ".pt")
         s = ENV_DUMMY.reset()
         for t in range(MAX_EP_STEP):
-            s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1))  
+            s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1), 0)  
             if done:
                 s = np.array([0,0,0,0,0])
         ENV_DUMMY.cleanup()
@@ -200,21 +197,3 @@ if __name__ == "__main__":
     plt.ylabel('Moving average ep reward')
     plt.xlabel('Episodes')
     plt.savefig(MODEL_NAME + "_lc.png")
-
-
-# def printgradnorm(self, grad_input, grad_output):
-#     print('Inside ' + self.__class__.__name__ + ' backward')
-#     print('Inside class:' + self.__class__.__name__)
-#     print('')
-#     # print('grad_input: ', type(grad_input))
-#     # print('grad_input[0]: ', type(grad_input[0]))
-#     # print('grad_output: ', type(grad_output))
-#     # print('grad_output[0]: ', type(grad_output[0]))
-#     print('')
-#     print('grad_input size:', grad_input[0].size())
-#     print('grad_output size:', grad_output[0].size())
-#     print('grad_input:', grad_input)
-#     print('$$$$\n\n\n')
-#     print('grad_input norm:', grad_input[0].norm()) 
-#     print('grad_output norm:', grad_output[0].norm())
-# self.c2.register_backward_hook(printgradnorm)

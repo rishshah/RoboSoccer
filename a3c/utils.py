@@ -11,7 +11,7 @@ def v_wrap(np_array, dtype=np.float32):
 
 def set_init(layers):
     for layer in layers:
-        nn.init.normal_(layer.weight, mean=0., std=0.1)
+        nn.init.normal_(layer.weight, mean=0., std=0.07)
         nn.init.constant_(layer.bias, 0.1)
 
 

@@ -15,10 +15,10 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.8
+    SIMULATION_TIME = 6
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/debug/hands_opposite.bvh"
+    MOTION_CLIP = CWD + "/imitation/test/wave.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints.txt"
     FRAME_TIME = 0.04
 
@@ -35,6 +35,12 @@ class Environment(object):
         # Hands Opposite
         # "lae1", "rae1",
 
+        # Wave
+        "lae1", "rae1",
+        "lae2", "rae2",
+        "lae3", "rae3",
+        "lae4", "rae4",
+
         # UpperBody + knees
         # "lle4", "rle4",
         # "he1","he2",
@@ -47,6 +53,12 @@ class Environment(object):
         # "he1","he2",
         # "lae1","lae2","lae3","lae4",
         # "rae1","rae2","rae3","rae4"
+
+        # WIP
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "rle1","rle2","rle3","rle4","rle5","rle6",
+        # "lae1","lae2","lae3","lae4",
+        # "rae1","rae2","rae3","rae4"
         
         # Situps
         # "lle5", "rle5",
@@ -54,8 +66,8 @@ class Environment(object):
         # "lle3", "rle3",
         
         # Left_Leg
-        "lle1","lle2","lle3","lle4","lle5","lle6",
-        "rle1","rle2","rle3","rle4","rle5","rle6",
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "rle1","rle2","rle3","rle4","rle5","rle6",
     ]
 
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS));    
@@ -63,8 +75,8 @@ class Environment(object):
     # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([5,5,5, 100,100,100, SIMULATION_TIME])])
     # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
     # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([5,5,5, 100,100,100, 0.02,1,1, 100, SIMULATION_TIME])])
-    # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([0])])
-    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([SIMULATION_TIME])])
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -79,7 +91,7 @@ class Environment(object):
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
-        self.state_dim = len(self.ACTION_KEYS)*2  + 1
+        self.state_dim = len(self.ACTION_KEYS)*3  +1 
         self.action_dim = len(self.ACTION_KEYS)
         
         self.agent = BaseAgent(host=host, port=agent_port, teamname=self.TEAM, player_number=self.U_NUM)
@@ -110,7 +122,7 @@ class Environment(object):
         tmp = {}
         for i, s in enumerate(self.ACTION_KEYS):
             tmp[s] = action[i]
-        print(tmp)
+        # print(tmp)
         return tmp
 
     def demap_state(self, state, acc, gyr, pos, orr, velocities, target, time):
@@ -122,8 +134,8 @@ class Environment(object):
         # tmp = tmp + list(pos)
         # tmp = tmp + [orr]
         tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
-        # tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
-        print(time - self.init_time, target)
+        tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
+        # print(time - self.init_time, target)
         return np.array(tmp)
 
     def step(self, action):
@@ -132,7 +144,8 @@ class Environment(object):
             self.update_motion(state)
             target, r = self.generate_reward(state, time, is_fallen)  
             s = self.demap_state(state, acc, gyr, pos, orr, self.get_velocity(state), target, time)
-            
+            # if x > 20000:
+            #     return s, r, is_fallen or self.time_up(time), None 
             return s, r, self.time_up(time), None        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
@@ -142,11 +155,16 @@ class Environment(object):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
         reward = -0.001 * sim
         # print("(generate_reward)", reward)
-        # if is_fallen:
+        # if is_fallen and x > 20000:
         #     print('(generate_reward) fallen ', time-self.init_time)
         #     reward -= 1000 * (1 - (time-self.init_time)/self.SIMULATION_TIME)
         # print("TARGET:", target)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
+
+    def set_init_pose(self):
+        for i in range(13):
+            s, _, _, t = self.step(np.array([-5, -5, 0,0,0,0,0,0]))
+        return s, t
 
     def reset(self):
         self.count_reset += 1
@@ -171,7 +189,10 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        return np.zeros(self.state_dim)
+        # s, _, _, _ = self.step(np.array([-900, -900, 0,0,0,0,0,0]))
+        s, self.init_time = set_init_pose()
+        return s
+        # return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()
@@ -179,7 +200,7 @@ class Environment(object):
 
     def time_up(self, time):
         if(time - self.init_time) >= self.SIMULATION_TIME:
-            self.init_time = time
+            # self.init_time = time
             return True
         else:
             return False
@@ -213,21 +234,20 @@ class Environment(object):
 
 
 if __name__ == "__main__":
-    env = Environment()
-    s = env.reset()
-    action = env.DEFAULT_ACTION;
-    diff = np.array([s[2] - s[0], s[3] - s[1]])
-    beta = 1
-    tr = 0
-    for i in range(1,200):
-        s, r, is_done, _ = env.step(action + diff * beta)
-        print(i, diff, r)
-        print(s)
-        diff = np.array([s[2] - s[0], s[3] - s[1]])
-        tr += r
-        if is_done:
-            break
-    print(tr)
+    # env = Environment()
+    # s = env.reset()
+    # action = env.DEFAULT_ACTION;
+    # diff = s[8:16] - s[0:8]
+    # beta = 1
+    # tr = 0
+    # for i in range(1,250):
+    #     s, r, is_done, _ = env.step(action + diff * beta)
+    #     # print(i, diff, r)
+    #     diff = s[8:16] - s[0:8]
+    #     tr += r
+    #     if is_done:
+    #         break
+    # print(tr)
     # env = Environment()
     # env.reset()
     # action = env.DEFAULT_ACTION;
@@ -271,12 +291,4 @@ if __name__ == "__main__":
     #     env.step(action);
 
     # env.save_motion("./imitation/debug/hands_opposite.bvh")
-
-    # env = Environment()
-    # env.reset()
-    # action = env.DEFAULT_ACTION;
-    # for i in range(1,500):
-    #     env.step(action);
-
-    # env.save_motion("./imitation/debug/stand.bvh")
     pass

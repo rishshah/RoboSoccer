@@ -15,7 +15,7 @@ rest_height = rest_targets[0,:,1].max() - rest_targets[0,:,1].min()
 rest_luarm_qt = Quaternions(np.array([ 0.70710678,  0.        ,  0.70710678,  0.        ])) 
 rest_ruarm_qt = Quaternions(np.array([ 0.70710678,  0.        ,  -0.70710678,  0.        ])) 
 
-filename = "./data/walk_in_place.bvh"
+filename = "./data/wave.bvh"
 mocap, mocap_names, mocap_ftime = BVH.load(filename)
 mocap_targets = Animation.positions_global(mocap)
 mocap_height = mocap_targets[0,:,1].max() - mocap_targets[0,:,1].min() 
@@ -34,107 +34,34 @@ mocap_map = {}
 for i, name in enumerate(mocap_names):
     mocap_map[name] = i
 
-# joint_map = {
-#     "LeftArm" :"LUpperarm",
-#     "LeftForeArm" :"LLowerarm",
-#     "LeftHand" :"LHand",
-
-#     "RightArm" :"RUpperarm",
-#     "RightForeArm" :"RLowerarm",
-#     "RightHand" :"RHand",
-
-#     "Neck1" :"Neck",
-#     "Head" :"Head",
-
-#     # "LHipJoint" :"LHip1", 
-#     "LeftUpLeg" :"LHip2",
-#     "LeftLeg" :"LLeg",
-#     "LeftFoot" :"LFoot",
-#     "LeftToeBase" :"LToes",
-
-#     # "RHipJoint" :"RHip1", 
-#     "RightUpLeg" :"RHip2",
-#     "RightLeg" :"RLeg",
-#     "RightFoot" :"RFoot",
-#     "RightToeBase" :"RToes",
-# }
-
-# joint_map = {
-#     "LeftArm" :"LUpperarm",
-#     "LeftForeArm" :"LLowerarm",
-#     "LeftHand" :"LHand",
-
-#     "RightArm" :"RUpperarm",
-#     "RightForeArm" :"RLowerarm",
-#     "RightHand" :"RHand",
-
-#     "Neck1" :"Neck",
-#     "Head" :"Head",
-
-#     # "LHipJoint" :"LHip1", 
-#     # "LeftUpLeg" :"LThigh",
-#     "LeftLeg" :"LLeg",
-#     "LeftFoot" :"LFoot",
-#     # "LeftToeBase" :"LToes",
-
-#     # "RHipJoint" :"RHip1", 
-#     # "RightUpLeg" :"RThigh",
-#     "RightLeg" :"RLeg",
-#     "RightFoot" :"RFoot",
-#     # "RightToeBase" :"RToes",
-# }
-
-# joint_map = {
-#     "lhumerus" :"LUpperarm",
-#     "lradius" :"LLowerarm",
-#     # "lwrist" :"LHand",
-
-#     "rhumerus" :"RUpperarm",
-#     "rradius" :"RLowerarm",
-#     # "rwrist" :"RHand",
-
-#     "thorax" :"Neck",
-#     "head" :"Head",
-
-#     # "LHipJoint" :"LHip1", 
-#     "lfemur" :"LHip2",
-#     "ltibia" :"LLeg",
-#     "lfoot" :"LFoot",
-#     # "ltoes" :"LToes",
-
-#     # "RHipJoint" :"RHip1", 
-#     "rfemur" :"RHip2",
-#     "rtibia" :"RLeg",
-#     "rfoot" :"RFoot",
-#     # "rtoes" :"RToes",
-# }
-
 joint_map = {
-    "hip" : "Torso", 
-    "lhumerus" :"LUpperarm",
-    "lradius" :"LLowerarm",
-    "lwrist" :"LHand",
+    "Hips" : "Torso", 
+    "LeftArm" :"LUpperarm",
+    "LeftForeArm" :"LLowerarm",
+    "LeftHand" :"LHand",
 
-    "rhumerus" :"RUpperarm",
-    "rradius" :"RLowerarm",
-    "rwrist" :"RHand",
+    "RightArm" :"RUpperarm",
+    "RightForeArm" :"RLowerarm",
+    "RightHand" :"RHand",
 
-    "thorax" :"Neck",
-    "head" :"Head",
+    "Neck1" :"Neck",
+    "Head" :"Head",
 
-    "lhipjoint" :"LHip", 
-    "lfemur" :"LThigh",
-    "ltibia" :"LLeg",
-    "lfoot" :"LFoot",
-    "ltoes" :"LToes",
+    "LHipJoint" :"LHip", 
+    "LeftUpLeg" :"LThigh",
+    "LeftLeg" :"LLeg",
+    "LeftFoot" :"LFoot",
+    "LeftToeBase" :"LToes",
 
-    "rhipjoint" :"RHip", 
-    "rfemur" :"RThigh",
-    "rtibia" :"RLeg",
-    "rfoot" :"RFoot",
-    "rtoes" :"RToes",
+    "RHipJoint" :"RHip", 
+    "RightUpLeg" :"RThigh",
+    "RightLeg" :"RLeg",
+    "RightFoot" :"RFoot",
+    "RightToeBase" :"RToes",
 }
+
 # joint_map = {
+#     "hip" : "Torso", 
 #     "lhumerus" :"LUpperarm",
 #     "lradius" :"LLowerarm",
 #     "lwrist" :"LHand",
@@ -159,7 +86,6 @@ joint_map = {
 #     "rtoes" :"RToes",
 # }
 
-
 targetmap = {} 
 for mocap_joint, rest_joint in joint_map.items():
     if(rest_joint in ["LUpperarm", "RUpperarm"]):
@@ -173,4 +99,4 @@ anim.rotations[:, rest_map["RUpperarm"]] += rest_ruarm_qt
 
 ik = JacobianInverseKinematics(anim, targetmap, iterations=5000, damping=7, silent=False)
 ik()
-BVH.save('./processed/wip3.bvh', anim, rest_names, 1.0/25)
+BVH.save('./processed/wave.bvh', anim, rest_names, 1.0/25)

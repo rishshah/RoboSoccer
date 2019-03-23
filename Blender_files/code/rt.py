@@ -46,6 +46,9 @@ for i in range(0,performer.nframes):
 rhip3 = np.rad2deg(np.arctan(d[:,2]/d[:,1])) 
 
 
+# e = targets[:,8] - targets[:,6]
+# f = targets[:,8] - targets[:,7]
+
 
 end_user_joint_names = end_user.get_joints_names()
 transformed_frames = np.zeros((performer.nframes, len(end_user_joint_names),3))
@@ -81,12 +84,17 @@ def hip_value(frame, type):
     return 0
   elif type == 'RightUpLeg': #hip3
     return rhip3[frame]
+
+  # elif type == 'RightArm': #lae1
+  #   return rhip3[frame]
+  # elif type == 'RightArm': #rae1
+  #   return rhip3[frame]
   else:
     print("PANIC")
     return None
 
 
-for frame in range(performer.nframes):
+for frame in range(500):
   for i, joint in enumerate(end_user_joint_names):
     for k, channel in enumerate(channels): 
       if channel not in data[joint]:

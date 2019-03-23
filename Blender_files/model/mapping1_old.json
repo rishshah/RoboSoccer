@@ -15,9 +15,9 @@
 	},
 	"LHip3": {
 		"custom": {
-			"Xrotation": 0,
+			"Xrotation": "LeftUpLeg",
 			"Yrotation": 0,
-			"Zrotation": "LeftUpLeg"
+			"Zrotation": 0
 		}
 	},
 	"LThigh": {	
@@ -34,9 +34,9 @@
 	"LFoot": {
 		"Xrotation": {
 			"LeftFoot": {
-				"Xrotation": 0,
+				"Xrotation": 1,
 				"Yrotation": 0,
-				"Zrotation": 1
+				"Zrotation": 0
 			}
 		},
 		"Yrotation": {
@@ -63,9 +63,9 @@
 	},
 	"RHip3": {
 		"custom": {
-			"Xrotation": 0,
+			"Xrotation": "RightUpLeg",
 			"Yrotation": 0,
-			"Zrotation": "RightUpLeg"			
+			"Zrotation": 0			
 		}
 	},
 	"RThigh": {	
@@ -82,9 +82,9 @@
 	"RFoot": {
 		"Xrotation": {
 			"RightFoot": {
-				"Xrotation": 0,
+				"Xrotation": 1,
 				"Yrotation": 0,
-				"Zrotation": 1
+				"Zrotation": 0
 			}
 		},
 		"Yrotation": {
@@ -97,69 +97,20 @@
 	},
 	"Neck":{},
 	"Head":{},
-	"RUpperarm":{
-		"Xrotation": {
-			"LeftArm": {
-				"Xrotation": 0,
-				"Yrotation": 0,
-				"Zrotation": 1
-			}
-		},
-		"Zrotation": {
-			"LeftArm": {
-				"Xrotation": 0,
-				"Yrotation": 1,
-				"Zrotation": 0
-			}
-		}
-	},
-	"RLowerarm":{
-		"Yrotation": {
-			"LeftForeArm": {
-				"Xrotation": 0,
-				"Yrotation": -1,
-				"Zrotation": 0
-			}
-		},
-		"Xrotation": {
-			"LeftForeArm": {
-				"Xrotation": 0,
-				"Yrotation": 0,
-				"Zrotation": -1
-			}
-		}
-	},
-	
 	"LUpperarm":{
-		"Xrotation": {
-			"RightArm": {
-				"Xrotation": 0,
-				"Yrotation": 0,
-				"Zrotation": 1
-			}
-		},
-		"Zrotation": {
-			"RightArm": {
-				"Xrotation": 0,
-				"Yrotation": 1,
-				"Zrotation": 0
-			}
+		"const":{
+			"Xrotation": -90,
+			"Yrotation": 0,
+			"Zrotation": 0
 		}
 	},
-	"LLowerarm":{
-		"Yrotation": {
-			"RightForeArm": {
-				"Xrotation": 0,
-				"Yrotation": -1,
-				"Zrotation": 0
-			}
-		},
-		"Xrotation": {
-			"RightForeArm": {
-				"Xrotation": 0,
-				"Yrotation": 0,
-				"Zrotation": -1
-			}
+	"LLowerarm":{},
+	"RUpperarm":{
+		"const":{
+			"Xrotation": -90,
+			"Yrotation": 0,
+			"Zrotation": 0
 		}
-	}
+	},
+	"RLowerarm":{}
 }

@@ -268,7 +268,7 @@ class JacobianInverseKinematics:
             print('[JacobianInverseKinematics] Start | Error: %f' % error)
         
         for i in range(self.iterations):
-
+            print(i)
             """ Get Global Rotations & Positions """
             gt = Animation.transforms_global(self.animation)
             gp = gt[:,:,:,3]

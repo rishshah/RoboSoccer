@@ -1,67 +1,176 @@
-from bvh import Bvh
+import os
+import sys
+import numpy as np
 
-with open('../processed/wip.bvh') as f:
-	mocap = Bvh(f.read())
+sys.path.append('./motion/')
+import BVH as BVH
+import Animation as Animation
+from InverseKinematics import JacobianInverseKinematics
+from Quaternions import Quaternions
 
-# for frame in range(mocap.nframes):
-# 	x = mocap.frame_joint_channel(frame, "rfoot", "Xrotation")
-# 	y = mocap.frame_joint_channel(frame, "rfoot", "Yrotation")
-# 	z = mocap.frame_joint_channel(frame, "rfoot", "Zrotation")
-# 	print(frame, x, y, z,)  
+rest, rest_names, _ = BVH.load('./model/nao_heirarchy6.bvh')
+rest_targets = Animation.positions_global(rest)
+rest_height = rest_targets[0,:,1].max() - rest_targets[0,:,1].min() 
 
-# with open('../model/constraints_old.txt') as f:
-with open('../model/constraints_new.txt') as f:
-	content = f.readlines()
+rest_luarm_qt = Quaternions(np.array([ 0.70710678,  0.        ,  0.70710678,  0.        ])) 
+rest_ruarm_qt = Quaternions(np.array([ 0.70710678,  0.        ,  -0.70710678,  0.        ])) 
 
-content = [x.strip() for x in content] 
-content = [x.split() for x in content] 
-channel_mapping = ['Xrotation', 'Yrotation', 'Zrotation']
+filename = "./data/walk_in_place.bvh"
+mocap, mocap_names, mocap_ftime = BVH.load(filename)
+mocap_targets = Animation.positions_global(mocap)
+mocap_height = mocap_targets[0,:,1].max() - mocap_targets[0,:,1].min() 
 
-mapping = {}
-for joint in content:
-	mapping[joint[0]] = []
-	for i in range(1,4):
-		if (joint[i] != '0'):
-			mapping[joint[0]].append((channel_mapping[i-1], joint[i]))
+targets = (rest_height / mocap_height) * mocap_targets
 
-start_skill_str = "STARTSKILL SKILL_TEST\n"
-start_frame_str = "STARTSTATE\n"
-end_frame_str   = "ENDSTATE\n"
-end_skill_str 	= "ENDSKILL\n"
+anim = rest.copy()
+anim.positions = anim.positions.repeat(len(targets), axis=0)
+anim.rotations.qs = anim.rotations.qs.repeat(len(targets), axis=0)
+anim.positions[:,0] = targets[:,0]
 
-theta = 3
-prev_frame = 0
-k = 0.5
+rest_map = {}
+for i, name in enumerate(rest_names):
+    rest_map[name] = i
+mocap_map = {}
+for i, name in enumerate(mocap_names):
+    mocap_map[name] = i
 
-with open('../processed/skills/test.skl', 'w') as f:
-	f.write(start_skill_str+ "\n")	
-	
-	
-	for frame in range(0, min(mocap.nframes, 120), 3):
-		# print(frame, mocap.frame_joint_channel(frame, "LeftThigh", "Xrotation"), mocap.frame_joint_channel(frame, "LeftThigh", "Yrotation"), mocap.frame_joint_channel(frame, "LeftThigh", "Zrotation"))  
-		if (frame == 0):
-			frame_data_str = "settar "
-		else	:
-			frame_data_str = "inctar "
-		wait_frame_str  = "wait " + str(round(k * mocap.frame_time * (frame - prev_frame),1)) + " end\n"
-		write = False
-		for joint in mocap.get_joints_names():
-			for channel in mapping[joint]:
-				this_frame_val = mocap.frame_joint_channel(frame, joint, channel[0])
-				if frame == 0:
-					prev_frame_val = 0	
-				else:
-					prev_frame_val = mocap.frame_joint_channel(prev_frame, joint, channel[0])
+# joint_map = {
+#     "LeftArm" :"LUpperarm",
+#     "LeftForeArm" :"LLowerarm",
+#     "LeftHand" :"LHand",
 
-				print(frame, prev_frame, channel, this_frame_val, prev_frame_val)
-				if "A" not in channel[1] and abs(this_frame_val - prev_frame_val) > theta: 
-					write = True
-					frame_data_str += " " + str(channel[1]) + " " + str(round(this_frame_val - prev_frame_val, 1))
-		if (write):
-			prev_frame = frame		
-			f.write(start_frame_str)
-			f.write(frame_data_str + " end \n")
-			f.write(wait_frame_str)
-			f.write(end_frame_str + "\n")
+#     "RightArm" :"RUpperarm",
+#     "RightForeArm" :"RLowerarm",
+#     "RightHand" :"RHand",
 
-	f.write(end_skill_str)
+#     "Neck1" :"Neck",
+#     "Head" :"Head",
+
+#     # "LHipJoint" :"LHip1", 
+#     "LeftUpLeg" :"LHip2",
+#     "LeftLeg" :"LLeg",
+#     "LeftFoot" :"LFoot",
+#     "LeftToeBase" :"LToes",
+
+#     # "RHipJoint" :"RHip1", 
+#     "RightUpLeg" :"RHip2",
+#     "RightLeg" :"RLeg",
+#     "RightFoot" :"RFoot",
+#     "RightToeBase" :"RToes",
+# }
+
+# joint_map = {
+#     "LeftArm" :"LUpperarm",
+#     "LeftForeArm" :"LLowerarm",
+#     "LeftHand" :"LHand",
+
+#     "RightArm" :"RUpperarm",
+#     "RightForeArm" :"RLowerarm",
+#     "RightHand" :"RHand",
+
+#     "Neck1" :"Neck",
+#     "Head" :"Head",
+
+#     # "LHipJoint" :"LHip1", 
+#     # "LeftUpLeg" :"LThigh",
+#     "LeftLeg" :"LLeg",
+#     "LeftFoot" :"LFoot",
+#     # "LeftToeBase" :"LToes",
+
+#     # "RHipJoint" :"RHip1", 
+#     # "RightUpLeg" :"RThigh",
+#     "RightLeg" :"RLeg",
+#     "RightFoot" :"RFoot",
+#     # "RightToeBase" :"RToes",
+# }
+
+# joint_map = {
+#     "lhumerus" :"LUpperarm",
+#     "lradius" :"LLowerarm",
+#     # "lwrist" :"LHand",
+
+#     "rhumerus" :"RUpperarm",
+#     "rradius" :"RLowerarm",
+#     # "rwrist" :"RHand",
+
+#     "thorax" :"Neck",
+#     "head" :"Head",
+
+#     # "LHipJoint" :"LHip1", 
+#     "lfemur" :"LHip2",
+#     "ltibia" :"LLeg",
+#     "lfoot" :"LFoot",
+#     # "ltoes" :"LToes",
+
+#     # "RHipJoint" :"RHip1", 
+#     "rfemur" :"RHip2",
+#     "rtibia" :"RLeg",
+#     "rfoot" :"RFoot",
+#     # "rtoes" :"RToes",
+# }
+
+joint_map = {
+    "hip" : "Torso", 
+    "lhumerus" :"LUpperarm",
+    "lradius" :"LLowerarm",
+    "lwrist" :"LHand",
+
+    "rhumerus" :"RUpperarm",
+    "rradius" :"RLowerarm",
+    "rwrist" :"RHand",
+
+    "thorax" :"Neck",
+    "head" :"Head",
+
+    "lhipjoint" :"LHip", 
+    "lfemur" :"LThigh",
+    "ltibia" :"LLeg",
+    "lfoot" :"LFoot",
+    "ltoes" :"LToes",
+
+    "rhipjoint" :"RHip", 
+    "rfemur" :"RThigh",
+    "rtibia" :"RLeg",
+    "rfoot" :"RFoot",
+    "rtoes" :"RToes",
+}
+# joint_map = {
+#     "lhumerus" :"LUpperarm",
+#     "lradius" :"LLowerarm",
+#     "lwrist" :"LHand",
+
+#     "rhumerus" :"RUpperarm",
+#     "rradius" :"RLowerarm",
+#     "rwrist" :"RHand",
+
+#     "thorax" :"Neck",
+#     "head" :"Head",
+
+#     "lhipjoint" :"LHip", 
+#     "lfemur" :"LThigh",
+#     "ltibia" :"LLeg",
+#     "lfoot" :"LFoot",
+#     "ltoes" :"LToes",
+
+#     "rhipjoint" :"RHip", 
+#     "rfemur" :"RThigh",
+#     "rtibia" :"RLeg",
+#     "rfoot" :"RFoot",
+#     "rtoes" :"RToes",
+# }
+
+
+targetmap = {} 
+for mocap_joint, rest_joint in joint_map.items():
+    if(rest_joint in ["LUpperarm", "RUpperarm"]):
+        anim.rotations[:, rest_map[rest_joint]] = mocap.rotations[:,mocap_map[mocap_joint]]
+    else:
+        anim.rotations[:, rest_map[rest_joint]] = mocap.rotations[:,mocap_map[mocap_joint]]
+    targetmap[rest_map[rest_joint]] = targets[:,mocap_map[mocap_joint]]
+
+anim.rotations[:, rest_map["LUpperarm"]] += rest_luarm_qt 
+anim.rotations[:, rest_map["RUpperarm"]] += rest_ruarm_qt 
+
+ik = JacobianInverseKinematics(anim, targetmap, iterations=5000, damping=7, silent=False)
+ik()
+BVH.save('./processed/wip3.bvh', anim, rest_names, 1.0/25)

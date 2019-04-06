@@ -154,7 +154,7 @@ class Environment(object):
     
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
-        reward = -0.01 * sim
+        reward = -0.001 * sim
         # print("(generate_reward)", reward)
         # if is_fallen:
         #     print('(generate_reward) fallen ', time-self.init_time)
@@ -163,10 +163,10 @@ class Environment(object):
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def set_init_pose(self):
-        for i in range(55):
+        for i in range(56):
             # s, r, done, _ = self.step(np.array([-3.3, -2.8, 3.2, -4, -0.15, 1.27, 0, 0.33]))
             act = np.array([3.3, 2.3, 3.2, -3.5, -0.2, 1, -0.3, 0.33])
-            s, r, done, _ = self.step(act * 26/55.0)
+            s, r, done, _ = self.step(act * 26/56.0)
             # act = np.array(
             #     [0.01, 1.15, -1, -0.75, -0.7,
             #      -0.03, 0.25, -1.5, -0.75, -0.72,

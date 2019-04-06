@@ -19,11 +19,11 @@ os.environ["OMP_NUM_THREADS"] = "4"
 GAMMA = 1
 MAX_EP = 30000
 MAX_EP_STEP = 45
-LEARNING_RATE = 0.0003
+LEARNING_RATE = 0.0002
 NUM_WORKERS = 4
 
 # Model IO Parameters
-MODEL_NAME = "s_wave"
+MODEL_NAME = "s_wave_3"
 LOAD_MODEL = True
 TEST_MODEL = False
 
@@ -147,12 +147,10 @@ def test():
     try:
         gnet = torch.load(MODEL_NAME + ".pt")
         s = ENV_DUMMY.reset()
-        from copy import deepcopy
-        start = deepcopy(s)
         for t in range(MAX_EP_STEP):
             s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1))  
             if done:
-                s = start
+                s = np.zeros(N_S)
         ENV_DUMMY.cleanup()
     
     except(KeyboardInterrupt): 
@@ -179,8 +177,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 3100
-    monitor_port = 3200
+    agent_port = 3300
+    monitor_port = 3400
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

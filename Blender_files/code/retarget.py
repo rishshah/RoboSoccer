@@ -21,6 +21,8 @@ mocap_targets = Animation.positions_global(mocap)
 mocap_height = mocap_targets[0,:,1].max() - mocap_targets[0,:,1].min() 
 
 targets = (rest_height / mocap_height) * mocap_targets
+targets[:,:,0] = (rest_height / mocap_height) * mocap_targets[:,:,2]
+targets[:,:,2] = -(rest_height / mocap_height) * mocap_targets[:,:,0]
 
 anim = rest.copy()
 anim.positions = anim.positions.repeat(len(targets), axis=0)
@@ -88,15 +90,12 @@ joint_map = {
 
 targetmap = {} 
 for mocap_joint, rest_joint in joint_map.items():
-    if(rest_joint in ["LUpperarm", "RUpperarm"]):
-        anim.rotations[:, rest_map[rest_joint]] = mocap.rotations[:,mocap_map[mocap_joint]]
-    else:
-        anim.rotations[:, rest_map[rest_joint]] = mocap.rotations[:,mocap_map[mocap_joint]]
+    anim.rotations[:, rest_map[rest_joint]] = mocap.rotations[:,mocap_map[mocap_joint]] 
     targetmap[rest_map[rest_joint]] = targets[:,mocap_map[mocap_joint]]
 
-anim.rotations[:, rest_map["LUpperarm"]] += rest_luarm_qt 
-anim.rotations[:, rest_map["RUpperarm"]] += rest_ruarm_qt 
+anim.rotations[:, rest_map["LUpperarm"]] =  mocap.rotations[:,mocap_map["LeftArm"]] + rest_luarm_qt
+anim.rotations[:, rest_map["RUpperarm"]] =  mocap.rotations[:,mocap_map["RightArm"]] + rest_ruarm_qt
 
-ik = JacobianInverseKinematics(anim, targetmap, iterations=5000, damping=7, silent=False)
+ik = JacobianInverseKinematics(anim, targetmap, iterations=5000, damping=2, silent=False)
 ik()
-BVH.save('./processed/wave.bvh', anim, rest_names, 1.0/25)
+BVH.save('./processed/rr_wave.bvh', anim, rest_names, 1.0/25)

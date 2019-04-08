@@ -9,19 +9,19 @@ ROOT Torso
         CHANNELS 3 Zrotation Yrotation Xrotation
         JOINT LThigh
         {
-            OFFSET 0.055 -0.055 -0.01
+            OFFSET -0.01 -0.055 -0.055
             CHANNELS 3 Zrotation Yrotation Xrotation
             JOINT LLeg
             {
-                OFFSET 0 -0.160 0.015
+                OFFSET 0.015 -0.160 0
                 CHANNELS 3 Zrotation Yrotation Xrotation
                 JOINT LFoot
                 {
-                    OFFSET 0 -0.16 -0.01
+                    OFFSET -0.01 -0.16 0
                     CHANNELS 3 Zrotation Yrotation Xrotation
                     JOINT LToes
                     {
-                        OFFSET 0 0 0.09
+                        OFFSET 0.09 0 0
                         CHANNELS 3 Zrotation Yrotation Xrotation
                         End Site
                         {
@@ -38,19 +38,19 @@ ROOT Torso
         CHANNELS 3 Zrotation Yrotation Xrotation
         JOINT RThigh
         {
-            OFFSET -0.055 -0.055 -0.01
+            OFFSET -0.01 -0.055 0.055
             CHANNELS 3 Zrotation Yrotation Xrotation
             JOINT RLeg
             {
-                OFFSET 0 -0.160 0.015
+                OFFSET 0.015 -0.160 0
                 CHANNELS 3 Zrotation Yrotation Xrotation
                 JOINT RFoot
                 {
-                    OFFSET 0 -0.16 -0.01
+                    OFFSET -0.01 -0.16 0
                     CHANNELS 3 Zrotation Yrotation Xrotation
                     JOINT RToes
                     {
-                        OFFSET 0 0 0.09
+                        OFFSET 0.09 0 0
                         CHANNELS 3 Zrotation Yrotation Xrotation
                         End Site
                         {
@@ -77,15 +77,15 @@ ROOT Torso
     }
     JOINT LUpperarm
     {
-        OFFSET 0.098 0.15 0
+        OFFSET 0 0.15 -0.098
         CHANNELS 3 Zrotation Yrotation Xrotation
         JOINT LLowerarm
         {
-            OFFSET 0 0.009 0.09
+            OFFSET 0.09 0.009 0
             CHANNELS 3 Zrotation Yrotation Xrotation
             JOINT LHand
             {
-                OFFSET 0 0 0.105
+                OFFSET 0.105 0 0
                 CHANNELS 3 Zrotation Yrotation Xrotation
                 End Site
                 {
@@ -96,15 +96,15 @@ ROOT Torso
     }
     JOINT RUpperarm
     {
-        OFFSET -0.098 0.15 0
+        OFFSET 0 0.15 0.098
         CHANNELS 3 Zrotation Yrotation Xrotation
         JOINT RLowerarm
         {
-            OFFSET 0 0.009 0.09
+            OFFSET 0.09 0.009 0
             CHANNELS 3 Zrotation Yrotation Xrotation
             JOINT RHand
             {
-                OFFSET 0 0 0.105
+                OFFSET 0.105 0 0
                 CHANNELS 3 Zrotation Yrotation Xrotation
                 End Site
                 {
@@ -116,5 +116,5 @@ ROOT Torso
 }
 MOTION
 Frames: 1
-Frame Time: 0.0083333
+Frame Time: 0.04
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 90 0 0 0 0 0 0 0 0 -90 0 0 0 0 0 0 0

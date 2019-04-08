@@ -15,11 +15,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.8
+    SIMULATION_TIME = 7.8
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/test/r_short_wave.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints_7.txt"
+    MOTION_CLIP = CWD + "/imitation/debug/squats.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints_5.txt"
     FRAME_TIME = 0.04
 
     # Server and Monitor Params 
@@ -36,10 +36,10 @@ class Environment(object):
         # "lae1", "rae1",
 
         # Wave
-        "lae1", "rae1",
-        "lae2", "rae2",
-        "lae3", "rae3",
-        "lae4", "rae4",
+        # "lae1", "rae1",
+        # "lae2", "rae2",
+        # "lae3", "rae3",
+        # "lae4", "rae4",
 
         # UpperBody + knees
         # "lle4", "rle4",
@@ -61,9 +61,9 @@ class Environment(object):
         # "rae1","rae2","rae3","rae4"
         
         # Situps
-        # "lle5", "rle5",
-        # "lle4", "rle4",
-        # "lle3", "rle3",
+        "lle5", "rle5",
+        "lle4", "rle4",
+        "lle3", "rle3",
         
         # Left_Leg
         # "lle1","lle2","lle3","lle4","lle5","lle6",
@@ -76,7 +76,7 @@ class Environment(object):
     # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
     # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([5,5,5, 100,100,100, 0.02,1,1, 100, SIMULATION_TIME])])
     DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS)) * -100, np.array([0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 50, np.array([SIMULATION_TIME])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     MAX_COUNT = 50
@@ -147,26 +147,27 @@ class Environment(object):
             # print(is_fallen, time - self.init_time)
             # if x > 20000:
             #     return s, r, is_fallen or self.time_up(time), None 
-            return s, r, self.time_up(time), time        
+            return s, r, is_fallen or self.time_up(time), time        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
-        reward = -0.01 * sim
+        reward = -0.001 * sim
         # print("(generate_reward)", reward)
-        # if is_fallen:
-        #     print('(generate_reward) fallen ', time-self.init_time)
-        #     reward -= 1000 * (1 - (time-self.init_time)/self.SIMULATION_TIME)
+        if is_fallen:
+            print('(generate_reward) fallen ', time-self.init_time)
+            reward -= 1500 * (1 - (time-self.init_time)/self.SIMULATION_TIME)
+            # reward -= 1500
         # print("TARGET:", target)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def set_init_pose(self):
-        for i in range(55):
+        for i in range(56):
             # s, r, done, _ = self.step(np.array([-3.3, -2.8, 3.2, -4, -0.15, 1.27, 0, 0.33]))
             act = np.array([3.3, 2.3, 3.2, -3.5, -0.2, 1, -0.3, 0.33])
-            s, r, done, _ = self.step(act * 26/55.0)
+            s, r, done, _ = self.step(act * 26/56.0)
             # act = np.array(
             #     [0.01, 1.15, -1, -0.75, -0.7,
             #      -0.03, 0.25, -1.5, -0.75, -0.72,
@@ -201,9 +202,9 @@ class Environment(object):
             self.init_time = self.agent.initialize()            
 
         # s, _, _, _ = self.step(np.array([-900, -900, 0,0,0,0,0,0]))
-        s = self.set_init_pose()
-        return s
-        # return np.zeros(self.state_dim)
+        # s = self.set_init_pose()
+        # return s
+        return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()
@@ -245,24 +246,24 @@ class Environment(object):
 
 
 if __name__ == "__main__":
-    env = Environment()
-    s = env.reset()
-    action = env.DEFAULT_ACTION;
-    # diff = s[18:36] - s[0:18]
-    diff = s[8:16] - s[0:8]
-    beta = 1
-    tr = 0
-    print(s[0:8])
-    print(s[8:16])
-    for i in range(1,40):
-        s, r, is_done, _ = env.step(action + diff * beta)
-        print(i, diff, r)
-        # diff = s[18:36] - s[0:18]
-        diff = s[8:16] - s[0:8]
-        tr += r
-        # if is_done:
-        #     break
-    print(tr)
+    # env = Environment()
+    # s = env.reset()
+    # action = env.DEFAULT_ACTION;
+    # # diff = s[18:36] - s[0:18]
+    # diff = s[8:16] - s[0:8]
+    # beta = 1
+    # tr = 0
+    # print(s[0:8])
+    # print(s[8:16])
+    # for i in range(1,40):
+    #     s, r, is_done, _ = env.step(action + diff * beta)
+    #     print(i, diff, r)
+    #     # diff = s[18:36] - s[0:18]
+    #     diff = s[8:16] - s[0:8]
+    #     tr += r
+    #     # if is_done:
+    #     #     break
+    # print(tr)
     # env = Environment()
     # env.reset()
     # action = env.DEFAULT_ACTION;

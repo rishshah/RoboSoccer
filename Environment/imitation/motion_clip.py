@@ -25,7 +25,7 @@ class MotionClip(object):
         if frame >= self.mocap.nframes:
             return None
 
-        # print("(get_pose) FN : ", time , frame)
+        print("(get_pose) FN : ", time , frame)
         for joint in self.mocap.get_joints_names():
             for channel in self.mapping[joint]:
                 curr_angle = self.mocap.frame_joint_channel(frame, joint, channel[0])
@@ -36,47 +36,47 @@ class MotionClip(object):
         target_pose = self.get_pose(time)
         if target_pose is not None:
             ret = self.get_pose(time+0.04)
-            for joint in ret:
-                if joint in [
-                "lae1",
-                "lae2",
-                "lae4",
+            # for joint in ret:
+            #     if joint in [
+            #     "lae1",
+            #     "lae2",
+            #     "lae4",
 
-                "lle2",
-                "lle3",
-                "lle4",
+            #     "lle2",
+            #     "lle3",
+            #     "lle4",
 
-                "rae1",
-                "rae2",
-                "rae4",
+            #     "rae1",
+            #     "rae2",
+            #     "rae4",
 
-                "rle2",
-                "rle3",
-                "rle4"]:
-                    ret[joint] *= -1
+            #     "rle2",
+            #     "rle3",
+            #     "rle4"]:
+            #         ret[joint] *= -1
             return ret, self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
         for x in b.keys():
             if x in keys:
-                if x in [
-                "lae1",
-                "lae2",
-                "lae4",
+                # if x in [
+                # "lae1",
+                # "lae2",
+                # "lae4",
 
-                "lle2",
-                "lle3",
-                "lle4",
+                # "lle2",
+                # "lle3",
+                # "lle4",
 
-                "rae1",
-                "rae2",
-                "rae4",
+                # "rae1",
+                # "rae2",
+                # "rae4",
 
-                "rle2",
-                "rle3",
-                "rle4"]:
-                    b[x] *= -1
-                # print(x, a[x], b[x])
+                # "rle2",
+                # "rle3",
+                # "rle4"]:
+                #     b[x] *= -1
+                print(x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

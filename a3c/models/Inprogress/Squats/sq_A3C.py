@@ -16,21 +16,21 @@ from Environment.environment import Environment
 os.environ["OMP_NUM_THREADS"] = "4"
 
 # Training Hyperparameters
-GAMMA = 0.99
+GAMMA = 1
 MAX_EP = 20000
 MAX_EP_STEP = 200
 LEARNING_RATE = 0.0001
-NUM_WORKERS = 4
+NUM_WORKERS = 2
 
 # Model IO Parameters
-MODEL_NAME = "squats_1"
-LOAD_MODEL = False
+MODEL_NAME = "squats"
+LOAD_MODEL = True
 TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 150
+Z1 = 200
 Z2 = 100
 
 # Gpu use flag
@@ -55,7 +55,7 @@ class Net(nn.Module):
         a1 = F.relu6(self.a1(x))
         a2 = F.relu6(self.a2(a1))
         mu = self.mu(a2)
-        sigma = F.softplus(self.sigma(a2))
+        sigma = 0.1 * F.softplus(self.sigma(a2))
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
         values = self.v(c2)
@@ -64,7 +64,7 @@ class Net(nn.Module):
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        if(t % 10 == 0):
+        if(t % 20 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
@@ -111,6 +111,9 @@ class Worker(mp.Process):
 
                 if self.g_ep.value % 20 == 19:
                     torch.save(self.gnet, MODEL_NAME + ".pt")
+
+                if self.g_ep.value % 2000 == 19:
+                    torch.save(self.gnet, MODEL_NAME + "_" + str(self.g_ep.value//2000) + ".pt")
 
                 for t in range(MAX_EP_STEP):
                     a = self.lnet.choose_action(v_wrap(s[None, :]), t)
@@ -177,8 +180,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 3500
-    monitor_port = 3600
+    agent_port = 3300
+    monitor_port = 3400
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

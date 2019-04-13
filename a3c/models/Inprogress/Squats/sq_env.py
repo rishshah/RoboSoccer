@@ -76,7 +76,7 @@ class Environment(object):
     # DEFAULT_STATE_MIN = np.concatenate([np.ones(3*len(ACTION_KEYS)) * -50, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 80, 0])])
     # DEFAULT_STATE_RANGE = np.concatenate([np.ones(3*len(ACTION_KEYS)) * 50, np.array([5,5,5, 100,100,100, 0.02,1,1, 100, SIMULATION_TIME])])
     DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS)) * -100, np.array([0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([SIMULATION_TIME])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([2])])
 
     #Server Restart Parameter
     MAX_COUNT = 50

@@ -23,7 +23,7 @@ LEARNING_RATE = 0.0002
 NUM_WORKERS = 4
 
 # Model IO Parameters
-MODEL_NAME = "s_wave_3"
+MODEL_NAME = "s_wave"
 LOAD_MODEL = True
 TEST_MODEL = False
 
@@ -177,8 +177,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 3300
-    monitor_port = 3400
+    agent_port = 3100
+    monitor_port = 3200
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

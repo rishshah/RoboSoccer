@@ -17,21 +17,21 @@ os.environ["OMP_NUM_THREADS"] = "4"
 
 # Training Hyperparameters
 GAMMA = 1
-MAX_EP = 30000
-MAX_EP_STEP = 45
-LEARNING_RATE = 0.0003
-NUM_WORKERS = 4
+MAX_EP = 40000
+MAX_EP_STEP = 200
+LEARNING_RATE = 0.0001
+NUM_WORKERS = 5
 
 # Model IO Parameters
-MODEL_NAME = "s_wave"
-LOAD_MODEL = True
+MODEL_NAME = "squats_test2"
+LOAD_MODEL = False
 TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 100
-Z2 = 80
+Z1 = 200
+Z2 = 200
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -54,8 +54,8 @@ class Net(nn.Module):
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
         a2 = F.relu6(self.a2(a1))
-        mu = self.mu(a2)
-        sigma = F.softplus(self.sigma(a2))
+        mu = 2 * torch.tanh(self.mu(a2))
+        sigma = F.softplus(self.sigma(a2)) + 0.001
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
         values = self.v(c2)
@@ -64,7 +64,7 @@ class Net(nn.Module):
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        if(t % 10 == 0):
+        if(t % 20 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
@@ -110,7 +110,12 @@ class Worker(mp.Process):
                 ep_r = 0.
 
                 if self.g_ep.value % 20 == 19:
+                    for param_group in self.opt.param_groups:
+                        print(param_group["lr"])
                     torch.save(self.gnet, MODEL_NAME + ".pt")
+
+                if self.g_ep.value % 2000 == 1:
+                    torch.save(self.gnet, MODEL_NAME + "_" + str(self.g_ep.value//2000) + ".pt")
 
                 for t in range(MAX_EP_STEP):
                     a = self.lnet.choose_action(v_wrap(s[None, :]), t)
@@ -148,11 +153,11 @@ def test():
         gnet = torch.load(MODEL_NAME + ".pt")
         s = ENV_DUMMY.reset()
         from copy import deepcopy
-        start = deepcopy(s)
+        s_ = deepcopy(s)
         for t in range(MAX_EP_STEP):
             s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1))  
             if done:
-                s = start
+                s = deepcopy(s_)
         ENV_DUMMY.cleanup()
     
     except(KeyboardInterrupt): 

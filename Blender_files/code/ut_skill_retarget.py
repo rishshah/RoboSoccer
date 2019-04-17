@@ -33,7 +33,7 @@ theta = 3
 prev_frame = 0
 k = 0.5
 
-with open('../processed/skills/test.skl', 'w') as f:
+with open('../processed/test.skl', 'w') as f:
 	f.write(start_skill_str+ "\n")	
 	
 	

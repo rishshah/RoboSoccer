@@ -23,9 +23,9 @@ LEARNING_RATE = 0.00005
 NUM_WORKERS = 5
 
 # Model IO Parameters
-MODEL_NAME = "squats"
+MODEL_NAME = "wip"
 LOAD_MODEL = True
-TEST_MODEL = True
+TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
@@ -64,7 +64,7 @@ class Net(nn.Module):
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        if(t % 20 == 0):
+        if(t % 50 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
@@ -109,10 +109,14 @@ class Worker(mp.Process):
                 buffer_s, buffer_a, buffer_r = [], [], []
                 ep_r = 0.
 
-                if self.g_ep.value % 20 == 19:
+                if self.g_ep.value % 50 == 3:
+                    # import time
+                    # for param_group in self.opt.param_groups:
+                    #     print("lr", param_group["lr"])
+                    #     time.sleep(3)
                     torch.save(self.gnet, MODEL_NAME + ".pt")
 
-                if self.g_ep.value % 2000 == 19:
+                if self.g_ep.value % 2000 == 1:
                     torch.save(self.gnet, MODEL_NAME + "_" + str(self.g_ep.value//2000) + ".pt")
 
                 for t in range(MAX_EP_STEP):

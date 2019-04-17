@@ -2,39 +2,34 @@ HIERARCHY
 ROOT Torso
 {
     OFFSET 0 0 0
-    CHANNELS 6 Xposition Yposition Zposition Zrotation Yrotation Xrotation
+    CHANNELS 6 Xposition Yposition Zposition Xrotation Yrotation Zrotation
     JOINT LHip1 
     {   
-        OFFSET -0 -0.06 -0.01
-        CHANNELS 3 Zrotation Yrotation Xrotation
+        OFFSET -0.01 -0 -0.06
+        CHANNELS 3 Xrotation Yrotation Zrotation
         JOINT LHip2
         {
-            OFFSET 0.055 -0.055 0
-            CHANNELS 3 Zrotation Yrotation Xrotation
+            OFFSET 0 0.055 -0.055
+            CHANNELS 3 Xrotation Yrotation Zrotation
             JOINT LHip3
             {
-                OFFSET 0 0 0.01
-                CHANNELS 3 Zrotation Yrotation Xrotation
+                OFFSET 0.01 0 0
+                CHANNELS 3 Xrotation Yrotation Zrotation
                 JOINT LThigh
                 {
-                    OFFSET -0.01 0 0
-                    CHANNELS 3 Zrotation Yrotation Xrotation
+                    OFFSET 0 -0.01 0
+                    CHANNELS 3 Xrotation Yrotation Zrotation
                     JOINT LLeg
                     {
-                        OFFSET 0.01 -0.120 0.014
-                        CHANNELS 3 Zrotation Yrotation Xrotation
+                        OFFSET 0.014 0.01 -0.120
+                        CHANNELS 3 Xrotation Yrotation Zrotation
                         JOINT LFoot
                         {
-                            OFFSET 0 -0.1 -0.01
-                            CHANNELS 3 Zrotation Yrotation Xrotation
-                            JOINT LToes
+                            OFFSET -0.01 0 -0.1
+                            CHANNELS 3 Xrotation Yrotation Zrotation
+                            End Site
                             {
-                                OFFSET 0 -0.035 0.09
-                                CHANNELS 3 Zrotation Yrotation Xrotation
-                                End Site
-                                {
-                                    OFFSET 0 0 0
-                                }
+                                OFFSET 0.09 0 -0.035
                             }
                         }
                     }
@@ -44,36 +39,31 @@ ROOT Torso
     }
     JOINT RHip1 
     {   
-        OFFSET 0 -0.06 -0.01
-        CHANNELS 3 Zrotation Yrotation Xrotation
+        OFFSET -0.01 0 -0.06
+        CHANNELS 3 Xrotation Yrotation Zrotation
         JOINT RHip2
         {
-            OFFSET -0.055 -0.055 0
-            CHANNELS 3 Zrotation Yrotation Xrotation
+            OFFSET 0 -0.055 -0.055
+            CHANNELS 3 Xrotation Yrotation Zrotation
             JOINT RHip3
             {
-                OFFSET 0 0 0.01
-                CHANNELS 3 Zrotation Yrotation Xrotation
+                OFFSET 0.01 0 0
+                CHANNELS 3 Xrotation Yrotation Zrotation
                 JOINT RThigh
                 {
-                    OFFSET -0.01 0 0
-                    CHANNELS 3 Zrotation Yrotation Xrotation
+                    OFFSET 0 -0.01 0
+                    CHANNELS 3 Xrotation Yrotation Zrotation
                     JOINT RLeg
                     {
-                        OFFSET 0.01 -0.120 0.014
-                        CHANNELS 3 Zrotation Yrotation Xrotation
+                        OFFSET 0.014 0.01 -0.120
+                        CHANNELS 3 Xrotation Yrotation Zrotation
                         JOINT RFoot
                         {
-                            OFFSET 0 -0.1 -0.01
-                            CHANNELS 3 Zrotation Yrotation Xrotation
-                            JOINT RToes
+                            OFFSET -0.01 0 -0.1
+                            CHANNETLS 3 Xrotation Yrotation Zrotation
+                            End Site
                             {
-                                OFFSET 0 -0.035 0.09
-                                CHANNELS 3 Zrotation Yrotation Xrotation
-                                End Site
-                                {
-                                    OFFSET 0 0 0
-                                }
+                                OFFSET 0.09 0 -0.035
                             }
                         }
                     }
@@ -83,58 +73,48 @@ ROOT Torso
     }
     JOINT Neck
     {
-        OFFSET 0 0.04 0
-        CHANNELS 3 Zrotation Yrotation Xrotation
+        OFFSET 0 0 0.04
+        CHANNELS 3 Xrotation Yrotation Zrotation
         JOINT Head
         {
-            OFFSET 0 0.1 0
-            CHANNELS 3 Zrotation Yrotation Xrotation
+            OFFSET 0 0 0.1
+            CHANNELS 3 Xrotation Yrotation Zrotation
             End Site 
             {
-                OFFSET 0 0.07 0
+                OFFSET 0 0 0.07
             }
         }
     }
     JOINT LUpperarm
     {
-        OFFSET 0.098 0.15 0
-        CHANNELS 3 Zrotation Yrotation Xrotation
+        OFFSET 0 0.098 0.15
+        CHANNELS 3 Xrotation Yrotation Zrotation
         JOINT LLowerarm
         {
-            OFFSET 0 0.009 0.09
-            CHANNELS 3 Zrotation Yrotation Xrotation
-            JOINT LHand
+            OFFSET 0.09 0 0.009
+            CHANNELS 3 Xrotation Yrotation Zrotation
+            End Site
             {
-                OFFSET 0 0 0.105
-                CHANNELS 3 Zrotation Yrotation Xrotation
-                End Site
-                {
-                    OFFSET 0 0 0
-                }
+                OFFSET 0.105 0 0
             }
         }
     }
     JOINT RUpperarm
     {
-        OFFSET -0.098 0.15 0
-        CHANNELS 3 Zrotation Yrotation Xrotation
+        OFFSET 0 -0.098 0.15
+        CHANNELS 3 Xrotation Yrotation Zrotation
         JOINT RLowerarm
         {
-            OFFSET 0 0.009 0.09
-            CHANNELS 3 Zrotation Yrotation Xrotation
-            JOINT RHand
+            OFFSET 0.09 0 0.009
+            CHANNELS 3 Xrotation Yrotation Zrotation
+            End Site
             {
-                OFFSET 0 0 0.105
-                CHANNELS 3 Zrotation Yrotation Xrotation
-                End Site
-                {
-                    OFFSET 0 0 0
-                }
+                OFFSET 0.105 0 0
             }
         }
     }
 }
 MOTION
 Frames: 1
-Frame Time: 0.0083333
+Frame Time: 0.04
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

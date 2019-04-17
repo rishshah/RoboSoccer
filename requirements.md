@@ -2,7 +2,7 @@
 ## Cuda
 - sudo apt install nvidia-cuda-toolkit
 
-## Numpy, Pytorch, Sexpdata, Bvh
+## Numpy, Pytorch, Sexpdata, Bvh, SimplePID
 - sudo apt install python3-pip
 - pip3 install numpy
 - pip3 install https://download.pytorch.org/whl/cpu/torch-1.0.1-cp36-cp36m-linux_x86_64.whls
@@ -10,6 +10,7 @@
 - pip3 install sexpdata
 - pip3 install bvh
 - pip3 instal matplotlib
+- pip3 install simple-pid
 
 ## Sublime
 - wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -

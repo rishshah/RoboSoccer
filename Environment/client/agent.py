@@ -86,9 +86,10 @@ class BaseAgent(SimSparkServer):
                 break
 
         # for s in self.state:
-        # if s in ["lae1", "rae1"]:
-            # print("(_parse_preceptors)", s, self.state[s])
-        
+        #     print("(_parse_preceptors)", s, self.state[s])
+        if self.is_fallen():
+            print(self.time, self.gyr, self.acc, self.pos, self.orr, self.is_fallen())
+
         return self.state, self.acc, self.gyr, self.pos, self.orr, float(self.time), self.is_fallen(), 
 
     def initialize(self):

@@ -11,7 +11,7 @@ class MotionClip(object):
         content = [x.strip() for x in content] 
         content = [x.split() for x in content] 
 
-        channel_mapping = ['Zrotation', 'Yrotation', 'Xrotation']
+        channel_mapping = ['Xrotation', 'Yrotation', 'Zrotation']
         self.mapping = {}
         for joint in content:
             self.mapping[joint[0]] = []
@@ -36,47 +36,47 @@ class MotionClip(object):
         target_pose = self.get_pose(time)
         if target_pose is not None:
             ret = self.get_pose(time+0.04)
-            for joint in ret:
-                if joint in [
-                "lae1",
-                "lae2",
-                "lae4",
+            # for joint in ret:
+            #     if joint in [
+            #     "lae1",
+            #     "lae2",
+            #     "lae4",
 
-                "lle2",
-                "lle3",
-                "lle4",
+            #     "lle2",
+            #     "lle3",
+            #     "lle4",
 
-                "rae1",
-                "rae2",
-                "rae4",
+            #     "rae1",
+            #     "rae2",
+            #     "rae4",
 
-                "rle2",
-                "rle3",
-                "rle4"]:
-                    ret[joint] *= -1
+            #     "rle2",
+            #     "rle3",
+            #     "rle4"]:
+            #         ret[joint] *= -1
             return ret, self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
         for x in b.keys():
             if x in keys:
-                if x in [
-                "lae1",
-                "lae2",
-                "lae4",
+                # if x in [
+                # "lae1",
+                # "lae2",
+                # "lae4",
 
-                "lle2",
-                "lle3",
-                "lle4",
+                # "lle2",
+                # "lle3",
+                # "lle4",
 
-                "rae1",
-                "rae2",
-                "rae4",
+                # "rae1",
+                # "rae2",
+                # "rae4",
 
-                "rle2",
-                "rle3",
-                "rle4"]:
-                    b[x] *= -1
+                # "rle2",
+                # "rle3",
+                # "rle4"]:
+                #     b[x] *= -1
                 # print(x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

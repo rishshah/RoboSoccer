@@ -38,7 +38,7 @@ ROOT Torso
         CHANNELS 3 Xrotation Yrotation Zrotation
         JOINT RThigh
         {
-            OFFSET -0.01 -0.055 -0.055
+<           OFFSET -0.01 -0.055 -0.055
             CHANNELS 3 Xrotation Yrotation Zrotation
             JOINT RLeg
             {

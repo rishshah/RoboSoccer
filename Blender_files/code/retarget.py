@@ -17,6 +17,7 @@ rest_height = rest_targets[0,:,2].max() - rest_targets[0,:,2].min()
 # mocap_targets = Animation.positions_global(mocap)
 # mocap_height = mocap_targets[0,:,1].max() - mocap_targets[0,:,1].min() 
 
+<<<<<<< HEAD
 # targets = (rest_height / mocap_height) * mocap_targets
 # targets[:,:,0] = (rest_height / mocap_height) * mocap_targets[:,:,2]
 # targets[:,:,1] = (rest_height / mocap_height) * mocap_targets[:,:,0]
@@ -111,7 +112,6 @@ BVH.save(fname, anim, rest_names, 1.0/25, order='xyz')
 # from bvh import Bvh
 # with open(fname) as f:
 #     new_mocap = Bvh(f.read())
-
     
 # channel = ["Xrotation", "Yrotation", "Zrotation"]
 

@@ -227,6 +227,7 @@ def save(filename, anim, names=None, frametime=1.0/24.0, order='zyx', positions=
         #    rots = np.degrees((-anim.orients[np.newaxis] * anim.rotations).euler(order=order[::-1]))
         #else:
         #    rots = np.degrees(anim.rotations.euler(order=order[::-1]))
+        print(order, order[::-1])
         rots = np.degrees(anim.rotations.euler(order=order[::-1]))
         poss = anim.positions
         

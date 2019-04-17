@@ -11,7 +11,7 @@ class MotionClip(object):
         content = [x.strip() for x in content] 
         content = [x.split() for x in content] 
 
-        channel_mapping = ['Zrotation', 'Yrotation', 'Xrotation']
+        channel_mapping = ['Xrotation', 'Yrotation', 'Zrotation']
         self.mapping = {}
         for joint in content:
             self.mapping[joint[0]] = []
@@ -25,7 +25,7 @@ class MotionClip(object):
         if frame >= self.mocap.nframes:
             return None
 
-        print("(get_pose) FN : ", time , frame)
+        # print("(get_pose) FN : ", time , frame)
         for joint in self.mocap.get_joints_names():
             for channel in self.mapping[joint]:
                 curr_angle = self.mocap.frame_joint_channel(frame, joint, channel[0])
@@ -77,6 +77,6 @@ class MotionClip(object):
                 # "rle3",
                 # "rle4"]:
                 #     b[x] *= -1
-                print(x, a[x], b[x])
+                # print(x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

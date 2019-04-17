@@ -15,11 +15,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 7.7
+    SIMULATION_TIME = 6
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/debug/squats.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints_5.txt"
+    MOTION_CLIP = CWD + "/imitation/test/r_wip.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints_7.txt"
     FRAME_TIME = 0.04
 
     # Server and Monitor Params 
@@ -55,15 +55,15 @@ class Environment(object):
         # "rae1","rae2","rae3","rae4"
 
         # WIP
-        # "lle1","lle2","lle3","lle4","lle5","lle6",
-        # "rle1","rle2","rle3","rle4","rle5","rle6",
-        # "lae1","lae2","lae3","lae4",
-        # "rae1","rae2","rae3","rae4"
+        "lle1","lle2","lle3","lle4","lle5","lle6",
+        "rle1","rle2","rle3","rle4","rle5","rle6",
+        "lae1","lae2","lae3","lae4",
+        "rae1","rae2","rae3","rae4"
         
         # Situps
-        "lle5", "rle5",
-        "lle4", "rle4",
-        "lle3", "rle3",
+        # "lle5", "rle5",
+        # "lle4", "rle4",
+        # "lle3", "rle3",
         
         # Left_Leg
         # "lle1","lle2","lle3","lle4","lle5","lle6",
@@ -156,7 +156,7 @@ class Environment(object):
     def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
         # print(sim)
-        reward = np.exp(-0.0003 * sim)
+        reward = np.exp(-0.0001 * sim)
         # print("(generate_reward)", reward)
         if is_fallen:
             print('(generate_reward) fallen ', time-self.init_time, np.exp(6 * (time-self.init_time)/self.SIMULATION_TIME))
@@ -231,9 +231,9 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        # s = self.set_init_pose()
-        # return s
-        return np.zeros(self.state_dim)
+        s = self.set_init_pose()
+        return s
+        # return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()
@@ -241,7 +241,7 @@ class Environment(object):
 
     def time_up(self, time):
         if(time - self.init_time) >= self.SIMULATION_TIME:
-            # self.init_time = time
+            self.init_time = time
             return True
         else:
             return False

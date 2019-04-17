@@ -64,7 +64,7 @@ class BaseAgent(SimSparkServer):
     # Server stuff
     def _parse_preceptors(self, raw_preceptors):
         """Takes raw preceptor data and gives usable data"""
-        print('(_parse_preceptors) message -> ', raw_preceptors)
+        # print('(_parse_preceptors) message -> ', raw_preceptors)
         
         data = sexpdata.loads("(" + raw_preceptors + ")")
         self.time = data[0][-1][-1]
@@ -85,10 +85,10 @@ class BaseAgent(SimSparkServer):
                         break
                 break
 
-        for s in self.state:
-            print("(_parse_preceptors)", s, self.state[s])
-        # if self.is_fallen():
-            print(self.time, sself.gyr, self.acc, self.pos, self.orr, self.is_fallen())
+        # for s in self.state:
+        #     print("(_parse_preceptors)", s, self.state[s])
+        if self.is_fallen():
+            print(self.time, self.gyr, self.acc, self.pos, self.orr, self.is_fallen())
 
         return self.state, self.acc, self.gyr, self.pos, self.orr, float(self.time), self.is_fallen(), 
 

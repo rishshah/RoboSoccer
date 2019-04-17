@@ -1,4 +1,4 @@
-Name			X	Y	Z	Min		Max
+	Name			X	Y	Z	Min		Max
 Torso			0	0	0	-0		0
 
 LeftHip1		0	1	0	-90		1
@@ -29,18 +29,23 @@ RightElbow		0	1	0	-120	120
 RightLowerarm	0	0	1	-1		90
 
 
-lae1
-lae2
-lae4
+lle4
+lle5
+lle6
 
-lle2
+rle4
+rle5
+rle6
+
+
 lle3
 lle4
+lle5
+lle6
 
-rae1
-rae2
-rae4
-
-rle2
 rle3
 rle4
+rle5
+rle6
+
+

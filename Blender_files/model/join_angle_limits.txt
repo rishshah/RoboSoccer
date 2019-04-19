@@ -28,27 +28,6 @@ RightUpperarm	0	0	1	-95		1
 RightElbow		0	1	0	-120	120
 RightLowerarm	0	0	1	-1		90
 
-
-lle4
-lle5
-lle6
-
-rle4
-rle5
-rle6
-
-
-lle3
-lle4
-lle5
-lle6
-
-rle3
-rle4
-rle5
-rle6
-
-
 he2
 lae1
 lle3

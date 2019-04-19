@@ -21,8 +21,9 @@ class MotionClip(object):
 
     def get_pose(self, time:float):
         pose = {}
-        frame = math.floor(time / self.mocap.frame_time) - 1
+        frame = math.floor(time / self.mocap.frame_time)
         if frame >= self.mocap.nframes:
+            print("(get_pose) frame >= " + str(frame >= self.mocap.nframes))
             return None
 
         # print("(get_pose) FN : ", time , frame)
@@ -33,50 +34,41 @@ class MotionClip(object):
         return pose
 
     def similarity(self, time, actual_pose, keys):
+        print(time)
         target_pose = self.get_pose(time)
         if target_pose is not None:
-            ret = self.get_pose(time+0.04)
-            # for joint in ret:
-            #     if joint in [
-            #     "lae1",
-            #     "lae2",
-            #     "lae4",
-
-            #     "lle2",
-            #     "lle3",
-            #     "lle4",
-
-            #     "rae1",
-            #     "rae2",
-            #     "rae4",
-
-            #     "rle2",
-            #     "rle3",
-            #     "rle4"]:
-            #         ret[joint] *= -1
+            ret = self.get_pose(time + self.mocap.frame_time)
+            for joint in ret:
+                if joint in [
+                    "he2",
+                    "lae1",
+                    "lle3",
+                    "lle4",
+                    "lle5",
+                    "rae1",
+                    "rle3",
+                    "rle4",
+                    "rle5",
+                ]:
+                    ret[joint] *= -1
             return ret, self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
         for x in b.keys():
             if x in keys:
-                # if x in [
-                # "lae1",
-                # "lae2",
-                # "lae4",
-
-                # "lle2",
-                # "lle3",
-                # "lle4",
-
-                # "rae1",
-                # "rae2",
-                # "rae4",
-
-                # "rle2",
-                # "rle3",
-                # "rle4"]:
-                #     b[x] *= -1
-                # print(x, a[x], b[x])
+                if x in [
+                    "he2",
+                    "lae1",
+                    "lle3",
+                    "lle4",
+                    "lle5",
+                    "rae1",
+                    "rle3",
+                    "rle4",
+                    "rle5",
+                ]:
+                    b[x] *= -1
+                print("(Diff) ", x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

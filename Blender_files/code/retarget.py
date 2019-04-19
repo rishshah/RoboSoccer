@@ -106,10 +106,10 @@ for mocap_joint, rest_joint in joint_map.items():
     anim.rotations[:, rest_map[rest_joint]] += mocap.rotations[:,mocap_map[mocap_joint]]
     targetmap[rest_map[rest_joint]] = targets[:,mocap_map[mocap_joint]]
 
-# ik = JacobianInverseKinematics(anim, targetmap, iterations=5000, damping=7, silent=False)
-# ik()
+ik = JacobianInverseKinematics(anim, targetmap, iterations=5000, damping=7, silent=False)
+ik()
 
-# BVH.save(retargetpath, anim, rest_names, 1.0/25, order='xyz')
+BVH.save(retargetpath, anim, rest_names, 1.0/25, order='xyz')
 
 ############################################################################################
 

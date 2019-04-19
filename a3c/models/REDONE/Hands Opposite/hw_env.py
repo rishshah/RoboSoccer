@@ -6,8 +6,6 @@ import socket, struct
 from copy import deepcopy
 from client.agent import BaseAgent
 from imitation.motion_clip import MotionClip
-from utils import *
-from Environment.utils import * 
 
 # Getting Current Directory for default paths
 CWD = os.path.dirname(__file__)
@@ -18,12 +16,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 1.8
+    SIMULATION_TIME = 3.8
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wave.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
-    SPECS = CWD + "/imitation/constraints/joint_specifications.json"
+    MOTION_CLIP = CWD + "/imitation/mocap/hands_opposite.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
     FRAME_TIME = 0.04
 
     # Server and Monitor Params 
@@ -38,7 +35,7 @@ class Environment(object):
     # Action params
     ACTION_KEYS = [
         # Hands Opposite
-        # "lae1", "rae1",
+        "lae1", "rae1",
 
         # Squats
         # "lle5", "rle5",
@@ -58,10 +55,10 @@ class Environment(object):
         # "rae1", "rae2", "rae3", "rae4",
 
         # Wave
-        "lae1", "rae1",
-        "lae2", "rae2",
-        "lae3", "rae3",
-        "lae4", "rae4",
+        # "lae1", "rae1",
+        # "lae2", "rae2",
+        # "lae3", "rae3",
+        # "lae4", "rae4",
 
         # WIP
         # "lle1","lle2","lle3","lle4","lle5","lle6",
@@ -81,7 +78,13 @@ class Environment(object):
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS))
     MAX_COUNT = 50
 
-    def __init__(self,  host:str=A_HOST,  agent_port:int=A_PORT, monitor_port:int=M_PORT, motion_clip:str=MOTION_CLIP):
+    def __init__(
+        self, 
+        host:str=A_HOST, 
+        agent_port:int=A_PORT,
+        monitor_port:int=M_PORT,
+        motion_clip:str=MOTION_CLIP):
+
         self.agent_port = agent_port
         self.monitor_port = monitor_port
 
@@ -94,49 +97,101 @@ class Environment(object):
         self.init_time = 0
         self.count_reset = 0
 
-        self.prev_state = None
-        self.motion = []
-        self.joints, self.nao_specs = get_joint_specs(self.CONSTRAINTS, self.SPECS) 
+        # For saving handmade motions
+        with open(self.CONSTRAINTS, 'r') as f:
+            content = f.readlines()
+        content = [x.strip() for x in content]
+        self.joints = [list(filter(None, c.split('\t'))) for c in content]
+        self.motion = [] 
+
+        self.prev_state = {} # For velocities
    
+    def get_velocity(self, state):
+        if self.prev_state:
+            tmp = [state[s] - self.prev_state[s] for s in self.ACTION_KEYS]
+            self.prev_state = deepcopy(state)
+            return np.array(tmp)
+        else:
+            self.prev_state = deepcopy(state)
+            return self.DEFAULT_ACTION 
+
+    def map_action(self, action):
+        tmp = {}
+        for i, s in enumerate(self.ACTION_KEYS):
+            tmp[s] = action[i]
+        # print(tmp)
+        return tmp
+
+    def demap_state(self, state, acc, gyr, pos, orr, velocities, target, time):
+        tmp = [state[s]for s in self.ACTION_KEYS]
+        # tmp = tmp + list(velocities)
+        tmp = tmp + list(target)
+        # tmp = tmp + list(acc)
+        # tmp = tmp + list(gyr)
+        # tmp = tmp + list(pos)
+        # tmp = tmp + [orr]
+        tmp = tmp + [time - self.init_time - self.FRAME_TIME]  
+        tmp = (np.array(tmp) - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
+        return np.array(tmp)
+
     def step(self, action):
         try:
-            structured_action = map_action(action, self.ACTION_KEYS)             
-            state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(structured_action)
-            rel_time = time - self.init_time
-            tar, r = self.generate_reward(state, rel_time, is_fallen)
-            vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)
-            s = demap_state(state, acc, gyr, pos, orr, vel, tar, rel_time, self.ACTION_KEYS)            
-            s = (s - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
-            
+            state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(self.map_action(action))
             self.update_motion(state)
-
+            target, r = self.generate_reward(state, time, is_fallen)
+            s = self.demap_state(state, acc, gyr, pos, orr, self.get_velocity(state), target, time)
             return s, r, is_fallen or self.time_up(time), time        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
     def generate_reward(self, state, time, is_fallen):
-        target, sim = self.motion_clip.similarity(max(0,time - self.FRAME_TIME), state, self.ACTION_KEYS)
-        reward = np.exp(-0.003 * sim)
-        # print("(generate_reward) reward ", sim, reward)
+        target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
+        reward = np.exp(-0.0003 * sim)
         if is_fallen:
-            print('(generate_reward) fallen ', time, np.exp(6 * time/self.SIMULATION_TIME))
-            reward = np.exp(6 * time/self.SIMULATION_TIME)
+            print('(generate_reward) fallen ', time-self.init_time, np.exp(6 * (time-self.init_time)/self.SIMULATION_TIME))
+            reward = np.exp(6 * (time-self.init_time)/self.SIMULATION_TIME)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
-    def set_init_pose(self, num_steps):
-        conversion_factor = 180/np.pi
-        conversion_factor /= 50
-
-        init_state = map_action(self.DEFAULT_ACTION, self.ACTION_KEYS)
-        print(num_steps, init_state)
-        target, sim = self.motion_clip.similarity(0, init_state, self.ACTION_KEYS)
-        diff = get_velocity(target, init_state, self.ACTION_KEYS)
-        diff /= conversion_factor
-        for i in range(num_steps):      
-            s, r, done, time = self.step(diff/num_steps)
-            self.init_time = time 
-            print(i, "INIT_R", r, done)
+    def set_init_pose(self):
+        # for i in range(56):
+            # s, r, done, _ = self.step(np.array([-3.3, -2.8, 3.2, -4, -0.15, 1.27, 0, 0.33]))
+            # act = np.array([3.3, 2.3, 3.2, -3.5, -0.2, 1, -0.3, 0.33])
+            # s, r, done, _ = self.step(act * 26/56.0)
+            # act = np.array(
+            #     [0.01, 1.15, -1, -0.75, -0.7,
+            #      -0.03, 0.25, -1.5, -0.75, -0.72,
+            #      -4.5, -4.3, 0.5, 0.1, 
+            #      -4.5, -5, 0.3, 0.1])
+            # act /= 5
+            # s, r, done, _ = self.step(act)
+            # print("INIT_R", r, done)
+        # return s
+        a = np.array([
+            0,#6.240369,
+            0,#2.498099,
+            0,#6.240369,
+            0,#2.498099,
+            0,# -26.441047,
+            0,# 11.556906,
+            0,#-8.509659,
+            0,#-14.629265,
+            0,#5.910771,
+            0,# -34.244259,
+            0,# 11.00585,
+            0,#2.435798,
+            -97.452478,
+            -17.224523,
+            -22.863067,
+            -7.204805,
+            -108.334258,
+            14.678713,
+            17.706834,
+            4.102674
+        ])
+        for i in range(27):      
+            s, r, done, _ = self.step(a/30.0)
+            # print("INIT_R", r, done)
         return s
     
     def reset(self):
@@ -162,8 +217,9 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        return self.set_init_pose(100)
-        # return np.zeros(self.state_dim)
+        # s = self.set_init_pose()
+        # return s
+        return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()
@@ -171,7 +227,7 @@ class Environment(object):
 
     def time_up(self, time):
         if(time - self.init_time) >= self.SIMULATION_TIME:
-            self.init_time = time
+            # self.init_time = time
             return True
         else:
             return False
@@ -186,7 +242,6 @@ class Environment(object):
         time.sleep(0.3)
         
     def update_motion(self, state):
-        self.prev_state = deepcopy(state)
         out_list = [0,0,0]
         for j in self.joints:
             for ang in j[1:]:
@@ -195,6 +250,17 @@ class Environment(object):
                 else:
                     out_list.append(0)
         self.motion.append(out_list)
+
+    def save_motion(self, file):
+        with open(file, 'a') as f:
+            f.write("Frames: " + str(len(self.motion)) + "\n")    
+            f.write("Frame Time: " + str(self.FRAME_TIME) + "\n")    
+            for frame in self.motion:
+                frame = [str(a) for a in frame]
+                f.write(" ".join(frame) + "\n")
+
+    def calc_com(self):
+        pass
 
 def simulate_squats():
     env = Environment()
@@ -205,7 +271,7 @@ def simulate_squats():
     for i in range(1,45):
         env.step(-action)
 
-    save_motion("./imitation/mocap/squats.bvh", env.motion, env.FRAME_TIME)
+    env.save_motion("./imitation/mocap/squats.bvh")
 
 def simulate_ho():
     env = Environment()
@@ -217,7 +283,7 @@ def simulate_ho():
         env.step(-action)
     for i in range(1,25):
         env.step(action)
-    save_motion("./imitation/mocap/hands_opposite.bvh", env.motion, env.FRAME_TIME)
+    env.save_motion("./imitation/mocap/hands_opposite.bvh")
 
 if __name__ == "__main__":
     env = Environment()

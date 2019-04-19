@@ -18,11 +18,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 1.8
+    SIMULATION_TIME = 2
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wave.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
+    MOTION_CLIP = CWD + "/imitation/mocap/stand.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
 
@@ -46,9 +46,9 @@ class Environment(object):
         # "lle3", "rle3",
 
         # UpperBody
-        # "he1" , "he2",
-        # "lae1", "lae2", "lae3", "lae4",
-        # "rae1", "rae2", "rae3", "rae4",
+        "he1" , "he2",
+        "lae1", "lae2", "lae3", "lae4",
+        "rae1", "rae2", "rae3", "rae4",
         
         # Stand
         # "lle1", "lle2", "lle3", "lle4", "lle5", "lle6",
@@ -58,10 +58,10 @@ class Environment(object):
         # "rae1", "rae2", "rae3", "rae4",
 
         # Wave
-        "lae1", "rae1",
-        "lae2", "rae2",
-        "lae3", "rae3",
-        "lae4", "rae4",
+        # "lae1", "rae1",
+        # "lae2", "rae2",
+        # "lae3", "rae3",
+        # "lae4", "rae4",
 
         # WIP
         # "lle1","lle2","lle3","lle4","lle5","lle6",
@@ -102,9 +102,9 @@ class Environment(object):
         try:
             structured_action = map_action(action, self.ACTION_KEYS)             
             state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(structured_action)
-            rel_time = time - self.init_time
-            tar, r = self.generate_reward(state, rel_time, is_fallen)
+            tar, r = self.generate_reward(state, time, is_fallen)
             vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)
+            rel_time = time - self.init_time
             s = demap_state(state, acc, gyr, pos, orr, vel, tar, rel_time, self.ACTION_KEYS)            
             s = (s - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
             
@@ -116,27 +116,53 @@ class Environment(object):
             return None, 0, True, None
     
     def generate_reward(self, state, time, is_fallen):
-        target, sim = self.motion_clip.similarity(max(0,time - self.FRAME_TIME), state, self.ACTION_KEYS)
+        target, sim = self.motion_clip.similarity(time - self.init_time, state, self.ACTION_KEYS)
         reward = np.exp(-0.003 * sim)
-        # print("(generate_reward) reward ", sim, reward)
+        print("(generate_reward) reward ", sim, reward)
         if is_fallen:
-            print('(generate_reward) fallen ', time, np.exp(6 * time/self.SIMULATION_TIME))
-            reward = np.exp(6 * time/self.SIMULATION_TIME)
+            print('(generate_reward) fallen ', time-self.init_time, np.exp(6 * (time-self.init_time)/self.SIMULATION_TIME))
+            reward = np.exp(6 * (time-self.init_time)/self.SIMULATION_TIME)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
-    def set_init_pose(self, num_steps):
-        conversion_factor = 180/np.pi
-        conversion_factor /= 50
-
-        init_state = map_action(self.DEFAULT_ACTION, self.ACTION_KEYS)
-        print(num_steps, init_state)
-        target, sim = self.motion_clip.similarity(0, init_state, self.ACTION_KEYS)
-        diff = get_velocity(target, init_state, self.ACTION_KEYS)
-        diff /= conversion_factor
-        for i in range(num_steps):      
-            s, r, done, time = self.step(diff/num_steps)
-            self.init_time = time 
-            print(i, "INIT_R", r, done)
+    def set_init_pose(self):
+        # for i in range(56):
+            # s, r, done, _ = self.step(np.array([-3.3, -2.8, 3.2, -4, -0.15, 1.27, 0, 0.33]))
+            # act = np.array([3.3, 2.3, 3.2, -3.5, -0.2, 1, -0.3, 0.33])
+            # s, r, done, _ = self.step(act * 26/56.0)
+            # act = np.array(
+            #     [0.01, 1.15, -1, -0.75, -0.7,
+            #      -0.03, 0.25, -1.5, -0.75, -0.72,
+            #      -4.5, -4.3, 0.5, 0.1, 
+            #      -4.5, -5, 0.3, 0.1])
+            # act /= 5
+            # s, r, done, _ = self.step(act)
+            # print("INIT_R", r, done)
+        # return s
+        a = np.array([
+            0,#6.240369,
+            0,#2.498099,
+            0,#6.240369,
+            0,#2.498099,
+            0,# -26.441047,
+            0,# 11.556906,
+            0,#-8.509659,
+            0,#-14.629265,
+            0,#5.910771,
+            0,# -34.244259,
+            0,# 11.00585,
+            0,#2.435798,
+            -97.452478,
+            -17.224523,
+            -22.863067,
+            -7.204805,
+            -108.334258,
+            14.678713,
+            17.706834,
+            4.102674
+        ])
+        for i in range(27):      
+            s, r, done, _ = self.step(a/30.0)
+            # print("INIT_R", r, done)
         return s
     
     def reset(self):
@@ -162,8 +188,9 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        return self.set_init_pose(100)
-        # return np.zeros(self.state_dim)
+        # s = self.set_init_pose()
+        # return s
+        return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()

@@ -17,14 +17,14 @@ os.environ["OMP_NUM_THREADS"] = "4"
 # Training Hyperparameters
 GAMMA = 1
 MAX_EP = 30000
-MAX_EP_STEP = 200
+MAX_EP_STEP = 500
 LEARNING_RATE = 0.00005
-NUM_WORKERS = 1
+NUM_WORKERS = 5
 
 # Model IO Parameters
-MODEL_NAME = "wip"
-LOAD_MODEL = False
-TEST_MODEL = False
+MODEL_NAME = "hands_opposite"
+LOAD_MODEL = True
+TEST_MODEL = True
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()

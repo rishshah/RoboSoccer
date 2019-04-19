@@ -19,12 +19,12 @@ GAMMA = 1
 MAX_EP = 30000
 MAX_EP_STEP = 200
 LEARNING_RATE = 0.00005
-NUM_WORKERS = 1
+NUM_WORKERS = 5
 
 # Model IO Parameters
-MODEL_NAME = "wip"
+MODEL_NAME = "upper_stand"
 LOAD_MODEL = False
-TEST_MODEL = False
+TEST_MODEL = True
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()

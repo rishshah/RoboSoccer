@@ -60,7 +60,7 @@ ROOT Torso
                         JOINT RFoot
                         {
                             OFFSET -0.01 0 -0.1
-                            CHANNETLS 3 Xrotation Yrotation Zrotation
+                            CHANNELS 3 Xrotation Yrotation Zrotation
                             End Site
                             {
                                 OFFSET 0.09 0 -0.035
@@ -117,4 +117,4 @@ ROOT Torso
 MOTION
 Frames: 1
 Frame Time: 0.04
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

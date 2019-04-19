@@ -1,4 +1,4 @@
-	Name			X	Y	Z	Min		Max
+Name			X	Y	Z	Min		Max
 Torso			0	0	0	-0		0
 
 LeftHip1		0	1	0	-90		1
@@ -49,3 +49,13 @@ rle5
 rle6
 
 
+he2
+lae1
+lle3
+lle4
+lle5
+
+rae1
+rle3
+rle4
+rle5

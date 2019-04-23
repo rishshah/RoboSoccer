@@ -34,41 +34,40 @@ class MotionClip(object):
         return pose
 
     def similarity(self, time, actual_pose, keys):
-        print(time)
         target_pose = self.get_pose(time)
         if target_pose is not None:
             ret = self.get_pose(time + self.mocap.frame_time)
-            for joint in ret:
-                if joint in [
-                    "he2",
-                    "lae1",
-                    "lle3",
-                    "lle4",
-                    "lle5",
-                    "rae1",
-                    "rle3",
-                    "rle4",
-                    "rle5",
-                ]:
-                    ret[joint] *= -1
+            # for joint in ret:
+            #     if joint in [
+            #         "he2",
+            #         "lae1",
+            #         "lle3",
+            #         "lle4",
+            #         "lle5",
+            #         "rae1",
+            #         "rle3",
+            #         "rle4",
+            #         "rle5",
+            #     ]:
+            #         ret[joint] *= -1
             return ret, self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
         for x in b.keys():
-            if x in keys:
-                if x in [
-                    "he2",
-                    "lae1",
-                    "lle3",
-                    "lle4",
-                    "lle5",
-                    "rae1",
-                    "rle3",
-                    "rle4",
-                    "rle5",
-                ]:
-                    b[x] *= -1
-                print("(Diff) ", x, a[x], b[x])
+            # if x in keys:
+            #     if x in [
+            #         "he2",
+            #         "lae1",
+            #         "lle3",
+            #         "lle4",
+            #         "lle5",
+            #         "rae1",
+            #         "rle3",
+            #         "rle4",
+            #         "rle5",
+            #     ]:
+            #         b[x] *= -1
+                # print("(Diff) ", x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])
         return ans

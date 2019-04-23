@@ -18,11 +18,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.5
+    SIMULATION_TIME = 5.6
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/squats.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
+    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wip.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
 
@@ -41,10 +41,10 @@ class Environment(object):
         # "lae1", "rae1",
 
         # Squats INP
-        "lle2", "rle2",
-        "lle5", "rle5",
-        "lle4", "rle4",
-        "lle3", "rle3",
+        # "lle2", "rle2",
+        # "lle5", "rle5",
+        # "lle4", "rle4",
+        # "lle3", "rle3",
 
         # UpperBody DONE
         # "he1" , "he2",
@@ -65,10 +65,10 @@ class Environment(object):
         # "lae4", "rae4",
 
         # WIP PARTIAL
-        # "lle2","lle3","lle4","lle5","lle6",
-        # "rle2","rle3","rle4","rle5","rle6",
-        # "lae1","lae2","lae3","lae4",
-        # "rae1","rae2","rae3","rae4"
+        "lle2","lle3","lle4","lle5","lle6",
+        "rle2","rle3","rle4","rle5","rle6",
+        "lae1","lae2","lae3","lae4",
+        "rae1","rae2","rae3","rae4"
     ]
 
     #Server Restart Parameter
@@ -77,7 +77,7 @@ class Environment(object):
 
     #Reward Hyperparams
     COPY = -0.01/len(ACTION_KEYS)
-    FALLEN = 0.15
+    FALLEN = 1
     HEIGHT = 0.08
     HEIGHT_THRESHOLD = 0.45 
     GYR = 0.00005
@@ -100,11 +100,11 @@ class Environment(object):
         self.motion = []
         self.joints, self.nao_specs = get_joint_specs(self.CONSTRAINTS, self.SPECS) 
    
-    def step(self, action, t=None):
+    def step(self, action):
         try:
             state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(map_action(action, self.ACTION_KEYS))
             rel_time = time - self.init_time
-            tar, r = self.generate_reward(state, gyr[0:2], pos[-1], rel_time, is_fallen, t)
+            tar, r = self.generate_reward(state, gyr[0:2], pos[-1], rel_time, is_fallen)
 
             vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)            
             s = demap_state(state, acc, gyr[0:2], pos[-1], orr, vel, tar, rel_time, self.ACTION_KEYS)            
@@ -116,26 +116,24 @@ class Environment(object):
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
-    def generate_reward(self, state, gyr, pos, time, is_fallen, t=None):
+    def generate_reward(self, state, gyr, pos, time, is_fallen):
         target, sim = self.motion_clip.similarity(max(0,time - self.FRAME_TIME), state, self.ACTION_KEYS)
         copy_reward = np.exp(self.COPY * sim)
         gyr_reward, pos_reward, fallen_reward = 0,0,0
         if math.fabs(gyr[0]) > self.GYR_THRESHOLD or math.fabs(gyr[1]) > self.GYR_THRESHOLD:
             gyr_reward = max(-30, -np.exp(self.GYR * (gyr[0]**2 + gyr[1]**2)))
 
-        if pos <= 0:
-            pos_reward = -30
-        elif pos < self.HEIGHT_THRESHOLD:
-            pos_reward = max(-3, -np.exp(self.HEIGHT * (1/pos)))
-        
-
+        if pos < self.HEIGHT_THRESHOLD:
+            pos_reward = max(-30, -np.exp(self.HEIGHT * (1/pos)))
+        # print("(generate_reward) cpy ", sim, copy_reward)
+        # print("(generate_reward) gyr ", gyr, gyr_reward)
+        # print("(generate_reward) pos ", pos, pos_reward)
         if is_fallen:
             fallen_reward = -np.exp(self.FALLEN * self.SIMULATION_TIME/time)
             print('(generate_reward) fallen ', time, fallen_reward)
 
         reward = copy_reward + gyr_reward + pos_reward + fallen_reward
-        if(t != None and t % 30 == 0):
-            print("(generate_reward) {} (cpy, {}), (gyr, {}), (pos, {})".format(round(time,2), round(copy_reward,2), round(gyr_reward,2), round(pos_reward,2)))
+        # print("(generate_reward) reward ", reward)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def set_init_pose(self, num_steps):
@@ -180,8 +178,8 @@ class Environment(object):
             s, _, _, time = self.step(self.DEFAULT_ACTION)
             self.init_time = time 
         
-        # return self.set_init_pose(70)
-        return s
+        return self.set_init_pose(70)
+        # return s
         
     def cleanup(self):
         self.agent.disconnect()
@@ -189,7 +187,7 @@ class Environment(object):
 
     def time_up(self, time):
         if(time - self.init_time) >= self.SIMULATION_TIME:
-            self.init_time = time
+            # self.init_time = time
             return True
         else:
             return False

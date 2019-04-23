@@ -18,11 +18,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.5
+    SIMULATION_TIME = 3
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/squats.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
+    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wip.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
 
@@ -37,16 +37,15 @@ class Environment(object):
 
     # Action params
     ACTION_KEYS = [
-        # Hands Opposite DONE
+        # Hands Opposite
         # "lae1", "rae1",
 
-        # Squats INP
-        "lle2", "rle2",
-        "lle5", "rle5",
-        "lle4", "rle4",
-        "lle3", "rle3",
+        # Squats
+        # "lle5", "rle5",
+        # "lle4", "rle4",
+        # "lle3", "rle3",
 
-        # UpperBody DONE
+        # UpperBody
         # "he1" , "he2",
         # "lae1", "lae2", "lae3", "lae4",
         # "rae1", "rae2", "rae3", "rae4",
@@ -64,24 +63,23 @@ class Environment(object):
         # "lae3", "rae3",
         # "lae4", "rae4",
 
-        # WIP PARTIAL
-        # "lle2","lle3","lle4","lle5","lle6",
-        # "rle2","rle3","rle4","rle5","rle6",
-        # "lae1","lae2","lae3","lae4",
-        # "rae1","rae2","rae3","rae4"
+        # WIP
+        "lle2","lle3","lle4","lle5","lle6",
+        "rle2","rle3","rle4","rle5","rle6",
+        "lae1","lae2","lae3","lae4",
+        "rae1","rae2","rae3","rae4"
     ]
+
+    DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS)) * -70, np.array([-10,-10,-10, -160,-15,-15, 0])])
+    DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([5,5,5, 100,100,100, SIMULATION_TIME])])
+    # DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS)) * -70, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 0])])
+    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([5,5,5, 100,100,100, 0.02,1,1, SIMULATION_TIME])])
+    # DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS))   *-70, np.array([0])])
+    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS))
     MAX_COUNT = 50
-
-    #Reward Hyperparams
-    COPY = -0.01/len(ACTION_KEYS)
-    FALLEN = 0.15
-    HEIGHT = 0.08
-    HEIGHT_THRESHOLD = 0.45 
-    GYR = 0.00005
-    GYR_THRESHOLD = 100
 
     def __init__(self,  host:str=A_HOST,  agent_port:int=A_PORT, monitor_port:int=M_PORT, motion_clip:str=MOTION_CLIP):
         self.agent_port = agent_port
@@ -100,14 +98,15 @@ class Environment(object):
         self.motion = []
         self.joints, self.nao_specs = get_joint_specs(self.CONSTRAINTS, self.SPECS) 
    
-    def step(self, action, t=None):
+    def step(self, action):
         try:
-            state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(map_action(action, self.ACTION_KEYS))
+            structured_action = map_action(action, self.ACTION_KEYS)             
+            state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(structured_action)
             rel_time = time - self.init_time
-            tar, r = self.generate_reward(state, gyr[0:2], pos[-1], rel_time, is_fallen, t)
-
-            vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)            
-            s = demap_state(state, acc, gyr[0:2], pos[-1], orr, vel, tar, rel_time, self.ACTION_KEYS)            
+            tar, r = self.generate_reward(state, rel_time, is_fallen)
+            vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)
+            s = demap_state(state, acc, gyr, pos, orr, vel, tar, rel_time, self.ACTION_KEYS)            
+            s = (s - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
             
             self.update_motion(state)
 
@@ -116,26 +115,13 @@ class Environment(object):
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
-    def generate_reward(self, state, gyr, pos, time, is_fallen, t=None):
+    def generate_reward(self, state, time, is_fallen):
         target, sim = self.motion_clip.similarity(max(0,time - self.FRAME_TIME), state, self.ACTION_KEYS)
-        copy_reward = np.exp(self.COPY * sim)
-        gyr_reward, pos_reward, fallen_reward = 0,0,0
-        if math.fabs(gyr[0]) > self.GYR_THRESHOLD or math.fabs(gyr[1]) > self.GYR_THRESHOLD:
-            gyr_reward = max(-30, -np.exp(self.GYR * (gyr[0]**2 + gyr[1]**2)))
-
-        if pos <= 0:
-            pos_reward = -30
-        elif pos < self.HEIGHT_THRESHOLD:
-            pos_reward = max(-3, -np.exp(self.HEIGHT * (1/pos)))
-        
-
+        reward = np.exp(-0.0003 * sim)
+        # print("(generate_reward) reward ", sim, reward)
         if is_fallen:
-            fallen_reward = -np.exp(self.FALLEN * self.SIMULATION_TIME/time)
-            print('(generate_reward) fallen ', time, fallen_reward)
-
-        reward = copy_reward + gyr_reward + pos_reward + fallen_reward
-        if(t != None and t % 30 == 0):
-            print("(generate_reward) {} (cpy, {}), (gyr, {}), (pos, {})".format(round(time,2), round(copy_reward,2), round(gyr_reward,2), round(pos_reward,2)))
+            print('(generate_reward) fallen ', time, np.exp(6 * time/self.SIMULATION_TIME))
+            reward = np.exp(6 * time/self.SIMULATION_TIME)
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def set_init_pose(self, num_steps):
@@ -175,13 +161,8 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        # Stabilizing the intiial state
-        for i in range(1,40):
-            s, _, _, time = self.step(self.DEFAULT_ACTION)
-            self.init_time = time 
-        
-        # return self.set_init_pose(70)
-        return s
+        return self.set_init_pose(50)
+        # return np.zeros(self.state_dim)
         
     def cleanup(self):
         self.agent.disconnect()
@@ -217,13 +198,13 @@ class Environment(object):
 def simulate_squats():
     env = Environment()
     env.reset()
-    action = np.array([0, 0, 0.4, 0.4, -1.2, -1.2, 0.8, 0.8])
+    action = np.array([0.4, 0.4, -1.2, -1.2, 0.8, 0.8])
     for i in range(1,50):
         env.step(action)
     for i in range(1,45):
         env.step(-action)
 
-    # save_motion("./imitation/mocap/squats.bvh", env.motion, env.FRAME_TIME)
+    save_motion("./imitation/mocap/squats.bvh", env.motion, env.FRAME_TIME)
 
 def simulate_ho():
     env = Environment()
@@ -235,41 +216,26 @@ def simulate_ho():
         env.step(-action)
     for i in range(1,25):
         env.step(action)
-    # save_motion("./imitation/mocap/hands_opposite.bvh", env.motion, env.FRAME_TIME)
-
-def simulate_stand():
-    env = Environment()
-    env.reset()
-    action = env.DEFAULT_ACTION
-    for i in range(1,100):
-        env.step(action)
-
-def simulate_fall():
-    env = Environment()
-    env.reset()
-    action = [0,0, 0.4, 0.4, 0,0, 0,0]
-    for i in range(1,200):
-        env.step(action)
+    save_motion("./imitation/mocap/hands_opposite.bvh", env.motion, env.FRAME_TIME)
 
 if __name__ == "__main__":
-    # env = Environment()
-    # s = env.reset()
-    # action = env.DEFAULT_ACTION
-    # action[-4] = 1
-    # action[-8] = 1
-    # beta = 1
-    # tr = 0
-    # print(s[0:8])
-    # print(s[8:16])
-    # for i in range(1,200):
-    #     # s, r, is_done, _ = env.step(action + diff * beta)
-    #     s, r, is_done, _ = env.step(action)
-    #     # print(i, diff, r)
-    #     # diff = s[18:36] - s[0:18]
-    #     # diff = s[8:16] - s[0:8]
-    #     tr += r
-    #     if is_done:
-    #         break
-    # print(tr)
-    # pass
-    simulate_squats()
+    env = Environment()
+    s = env.reset()
+    action = env.DEFAULT_ACTION
+    action[-4] = 1
+    action[-8] = 1
+    beta = 1
+    tr = 0
+    print(s[0:8])
+    print(s[8:16])
+    for i in range(1,200):
+        # s, r, is_done, _ = env.step(action + diff * beta)
+        s, r, is_done, _ = env.step(action)
+        # print(i, diff, r)
+        # diff = s[18:36] - s[0:18]
+        # diff = s[8:16] - s[0:8]
+        tr += r
+        if is_done:
+            break
+    print(tr)
+    pass

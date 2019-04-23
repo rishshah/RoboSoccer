@@ -22,15 +22,15 @@ LEARNING_RATE = 0.00005
 NUM_WORKERS = 5
 
 # Model IO Parameters
-MODEL_NAME = "upper_stand"
-LOAD_MODEL = False
-TEST_MODEL = True
+MODEL_NAME = "wip"
+LOAD_MODEL = True
+TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 100
-Z2 = 100
+Z1 = 120
+Z2 = 120
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 3100
-    monitor_port = 3200
+    agent_port = 3500
+    monitor_port = 3600
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

@@ -22,15 +22,15 @@ LEARNING_RATE = 0.00005
 NUM_WORKERS = 5
 
 # Model IO Parameters
-MODEL_NAME = "upper_stand"
+MODEL_NAME = "squats"
 LOAD_MODEL = False
-TEST_MODEL = True
+TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 100
-Z2 = 100
+Z1 = 120
+Z2 = 120
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()

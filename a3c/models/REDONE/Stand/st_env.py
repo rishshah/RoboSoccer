@@ -18,11 +18,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3
+    SIMULATION_TIME = 2
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wip.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
+    MOTION_CLIP = CWD + "/imitation/mocap/stand.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
 
@@ -37,25 +37,26 @@ class Environment(object):
 
     # Action params
     ACTION_KEYS = [
-        # Hands Opposite
+        # Hands Opposite DONE
         # "lae1", "rae1",
 
-        # Squats
+        # Squats INP
+        # "lle2", "rle2",
         # "lle5", "rle5",
         # "lle4", "rle4",
         # "lle3", "rle3",
 
-        # UpperBody
+        # UpperBody DONE
         # "he1" , "he2",
         # "lae1", "lae2", "lae3", "lae4",
         # "rae1", "rae2", "rae3", "rae4",
         
         # Stand
-        # "lle1", "lle2", "lle3", "lle4", "lle5", "lle6",
-        # "rle1", "rle2", "rle3", "rle4", "rle5", "rle6",
-        # "he1" , "he2",
-        # "lae1", "lae2", "lae3", "lae4",
-        # "rae1", "rae2", "rae3", "rae4",
+        "lle1", "lle2", "lle3", "lle4", "lle5", "lle6",
+        "rle1", "rle2", "rle3", "rle4", "rle5", "rle6",
+        "he1" , "he2",
+        "lae1", "lae2", "lae3", "lae4",
+        "rae1", "rae2", "rae3", "rae4",
 
         # Wave
         # "lae1", "rae1",
@@ -63,23 +64,22 @@ class Environment(object):
         # "lae3", "rae3",
         # "lae4", "rae4",
 
-        # WIP
-        "lle2","lle3","lle4","lle5","lle6",
-        "rle2","rle3","rle4","rle5","rle6",
-        "lae1","lae2","lae3","lae4",
-        "rae1","rae2","rae3","rae4"
+        # WIP PARTIAL
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "lle1","rle2","rle3","rle4","rle5","rle6",
     ]
-
-    DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS)) * -70, np.array([-10,-10,-10, -160,-15,-15, 0])])
-    DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([5,5,5, 100,100,100, SIMULATION_TIME])])
-    # DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS)) * -70, np.array([-10,-10,-10, -160,-15,-15, -0.01,-2,-2, 0])])
-    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([5,5,5, 100,100,100, 0.02,1,1, SIMULATION_TIME])])
-    # DEFAULT_STATE_MIN = np.concatenate([np.ones(2*len(ACTION_KEYS))   *-70, np.array([0])])
-    # DEFAULT_STATE_RANGE = np.concatenate([np.ones(2*len(ACTION_KEYS)) * 70, np.array([SIMULATION_TIME])])
 
     #Server Restart Parameter
     DEFAULT_ACTION = np.zeros(len(ACTION_KEYS))
     MAX_COUNT = 50
+
+    #Reward Hyperparams
+    COPY = -0.04/len(ACTION_KEYS)
+    # FALLEN = 0.5
+    HEIGHT = -0.1
+    HEIGHT_THRESHOLD = 0.5 
+    # GYR = 0.00005
+    GYR_THRESHOLD = 90
 
     def __init__(self,  host:str=A_HOST,  agent_port:int=A_PORT, monitor_port:int=M_PORT, motion_clip:str=MOTION_CLIP):
         self.agent_port = agent_port
@@ -98,33 +98,53 @@ class Environment(object):
         self.motion = []
         self.joints, self.nao_specs = get_joint_specs(self.CONSTRAINTS, self.SPECS) 
    
-    def step(self, action):
+    def step(self, action, t=None):
         try:
-            structured_action = map_action(action, self.ACTION_KEYS)             
-            state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(structured_action)
+            state, acc, gyr, pos, orr, time, is_fallen = self.agent.step(map_action(action, self.ACTION_KEYS))
             rel_time = time - self.init_time
-            tar, r = self.generate_reward(state, rel_time, is_fallen)
-            vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)
-            s = demap_state(state, acc, gyr, pos, orr, vel, tar, rel_time, self.ACTION_KEYS)            
-            s = (s - self.DEFAULT_STATE_MIN)/ self.DEFAULT_STATE_RANGE         
+            tar, r = self.generate_reward(state, gyr[0:2], pos[-1], acc, rel_time, is_fallen, t)
+
+            vel = get_velocity(state, self.prev_state, self.ACTION_KEYS)            
+            s = demap_state(state, acc, gyr[0:2], pos[-1], orr, vel, tar, rel_time, self.ACTION_KEYS)            
             
             self.update_motion(state)
+            
+            # For Reset phase for periodic motions
+            done = False
+            if is_fallen or self.time_up(time):
+                self.init_time = time
+                done = True
 
-            return s, r, is_fallen or self.time_up(time), time        
+            return s, r, done, time        
         
         except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError, socket.timeout, struct.error):
             return None, 0, True, None
     
-    def generate_reward(self, state, time, is_fallen):
+    def generate_reward(self, state, gyr, pos, acc, time, is_fallen, t=None):
+        copy_reward, gyr_reward, pos_reward, fallen_reward = 0,0,0,0
+        
         target, sim = self.motion_clip.similarity(max(0,time - self.FRAME_TIME), state, self.ACTION_KEYS)
-        reward = np.exp(-0.0003 * sim)
-        # print("(generate_reward) reward ", sim, reward)
+        copy_reward = np.exp(self.COPY * sim)
+        
+        if math.fabs(gyr[0]) < self.GYR_THRESHOLD and math.fabs(gyr[1]) < self.GYR_THRESHOLD:
+            gyr_reward = 0.05 # np.exp(self.GYR * (gyr[0]**2 + gyr[1]**2))
+
+        pos = max(pos, 0.01)
+        if pos > self.HEIGHT_THRESHOLD:
+            pos_reward = 0.3 * np.exp(self.HEIGHT * (1/pos))
+        
+        if(t != None and t % 30 == 0):
+            print("(generate_reward) {} \t (cpy, [{},{}]), (acc, {})\t (gyr, [{},{}]), \t (pos, [{},{}])".format(
+                round(time,2), round(sim,2), round(copy_reward,2), acc, gyr, round(gyr_reward,2), pos, round(pos_reward,2)))
+
         if is_fallen:
-            print('(generate_reward) fallen ', time, np.exp(6 * time/self.SIMULATION_TIME))
-            reward = np.exp(6 * time/self.SIMULATION_TIME)
+            # fallen_reward = np.exp(self.FALLEN * self.SIMULATION_TIME/time)
+            print('(generate_reward) fallen ', time)
+
+        reward = copy_reward + gyr_reward + pos_reward + fallen_reward
         return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
-    def set_init_pose(self, num_steps):
+    def set_init_pose(self, max_steps, num_steps):
         conversion_factor = 180/np.pi
         conversion_factor /= 50
 
@@ -133,9 +153,9 @@ class Environment(object):
         diff = get_velocity(target, init_state, self.ACTION_KEYS)
         diff /= conversion_factor
         for i in range(num_steps):      
-            s, r, done, time = self.step(diff/num_steps)
+            s, r, done, time = self.step(diff/max_steps)
             self.init_time = time 
-            # print(i, "INIT_R", r, done)
+            print(i, "INIT_R", r, done)
         return s
     
     def reset(self):
@@ -161,19 +181,20 @@ class Environment(object):
             self.start_server()
             self.init_time = self.agent.initialize()            
 
-        return self.set_init_pose(50)
-        # return np.zeros(self.state_dim)
+        # Stabilizing the intiial state
+        for i in range(1,40):
+            s, _, _, time = self.step(self.DEFAULT_ACTION)
+            self.init_time = time 
+        
+        # return self.set_init_pose(60, 30)
+        return s
         
     def cleanup(self):
         self.agent.disconnect()
         os.system("pkill -9 -f '{} --agent-port {} --server-port {}'".format(self.SERVER, self.agent_port, self.monitor_port))
 
     def time_up(self, time):
-        if(time - self.init_time) >= self.SIMULATION_TIME:
-            self.init_time = time
-            return True
-        else:
-            return False
+        return (time - self.init_time) >= self.SIMULATION_TIME
 
     def start_server(self):
         with open(self.LD_LIBRARY_PATH) as f:
@@ -198,13 +219,17 @@ class Environment(object):
 def simulate_squats():
     env = Environment()
     env.reset()
-    action = np.array([0.4, 0.4, -1.2, -1.2, 0.8, 0.8])
+    action = np.array([0, 0, 0.4, 0.4, -1.2, -1.2, 0.8, 0.8])
+    tr = 0
     for i in range(1,50):
-        env.step(action)
+        _, r, _, _ = env.step(action)
+        tr += r
     for i in range(1,45):
         env.step(-action)
-
-    save_motion("./imitation/mocap/squats.bvh", env.motion, env.FRAME_TIME)
+        tr += r
+    print(tr)
+    env.cleanup()
+    # save_motion("./imitation/mocap/squats.bvh", env.motion, env.FRAME_TIME)
 
 def simulate_ho():
     env = Environment()
@@ -216,26 +241,41 @@ def simulate_ho():
         env.step(-action)
     for i in range(1,25):
         env.step(action)
-    save_motion("./imitation/mocap/hands_opposite.bvh", env.motion, env.FRAME_TIME)
+    env.cleanup()
+    # save_motion("./imitation/mocap/hands_opposite.bvh", env.motion, env.FRAME_TIME)
 
-if __name__ == "__main__":
+def simulate_stand():
+    env = Environment()
+    env.reset()
+    action = env.DEFAULT_ACTION
+    for i in range(1,100):
+        env.step(action)
+    env.cleanup()
+
+def simulate_fall():
+    env = Environment()
+    env.reset()
+    action = [0,0, 0.4, 0.4, 0,0, 0,0]
+    for i in range(1,200):
+        env.step(action)
+    env.cleanup()
+
+def simulate_given():
     env = Environment()
     s = env.reset()
     action = env.DEFAULT_ACTION
-    action[-4] = 1
-    action[-8] = 1
-    beta = 1
     tr = 0
-    print(s[0:8])
-    print(s[8:16])
-    for i in range(1,200):
-        # s, r, is_done, _ = env.step(action + diff * beta)
+    beta = 1
+    for i in range(1,80):
         s, r, is_done, _ = env.step(action)
-        # print(i, diff, r)
-        # diff = s[18:36] - s[0:18]
-        # diff = s[8:16] - s[0:8]
+        diff = s[env.action_dim:2*env.action_dim] - s[0:env.action_dim]
+        action = np.clip(beta * diff, -3,3)
+        print(diff)
         tr += r
-        if is_done:
-            break
+        # if is_done:
+        #     break
     print(tr)
-    pass
+    env.cleanup()    
+
+if __name__ == "__main__":
+    simulate_given()

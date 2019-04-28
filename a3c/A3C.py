@@ -18,19 +18,19 @@ os.environ["OMP_NUM_THREADS"] = "4"
 GAMMA = 1
 MAX_EP = 30000
 MAX_EP_STEP = 200
-LEARNING_RATE = 0.00005
-NUM_WORKERS = 5
+LEARNING_RATE = 0.0001
+NUM_WORKERS = 4
 
 # Model IO Parameters
-MODEL_NAME = "squats"
+MODEL_NAME = "ho"
 LOAD_MODEL = True
 TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 120
-Z2 = 120
+Z1 = 100
+Z2 = 100
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -63,8 +63,8 @@ class Net(nn.Module):
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        # if(t % 20 == 0):
-        #     print(mu[0][0], sigma[0][0])
+        if(t % 40 == 0):
+            print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
             return mu.detach().numpy()
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 3100
-    monitor_port = 3200
+    agent_port = 4100
+    monitor_port = 4200
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

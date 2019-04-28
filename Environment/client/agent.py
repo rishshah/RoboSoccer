@@ -8,8 +8,10 @@ import sexpdata, math, time
 class BaseAgent(SimSparkServer):
     MODEL_PATH = "rsg/agent/nao/nao.rsg"  # Defaults to Nao model
     FALLEN_PARAM = 6
+    HEIGHT_LOWERBOUND = 0.45
     SPURIOUS_THRESHOLD = 20
     K = 0.9
+
     def __init__(self, teamname: str, player_number: int, host: str, port: int):
         """
         Args:
@@ -34,7 +36,6 @@ class BaseAgent(SimSparkServer):
     # Commands
     def synchronize(self):
         """Sent after every cycle of the server if AgentSyncMode is enabled, auto appended after every cycle"""
-        # TODO(LOGGING) Log appending syncronize message
         self.cycle_message += ef.synchronize()
 
     def set_hinge_joint(self, name: str, axis1_speed: float):
@@ -45,7 +46,6 @@ class BaseAgent(SimSparkServer):
             name: Name of joint to set
             axis1_speed: Speed value to set on axis, in radians per second. Speed will be maintained until new value set
         """
-        # TODO(LOGGING) Log appending hing_joint message
         self.cycle_message += ef.hinge_joint(name=name, ax1=axis1_speed)
 
     def beam(self, x_pos: float, y_pos: float, direction: float):
@@ -57,15 +57,11 @@ class BaseAgent(SimSparkServer):
             y_pos: Y coordinate of player
             direction: Direction of player. 0 points to +X axis, 90 points to +Y axis
         """
-        # TODO(GENERAL) Figure out when to use beam message
-        # TODO(LOGGING) Log appending beam message
         self.cycle_message += ef.beam(x=x_pos, y=y_pos, rot=direction)
 
     # Server stuff
     def _parse_preceptors(self, raw_preceptors):
         """Takes raw preceptor data and gives usable data"""
-        # print('(_parse_preceptors) message -> ', raw_preceptors)
-        
         data = sexpdata.loads("(" + raw_preceptors + ")")
         self.time = data[0][-1][-1]
         self.gyr  = data[2][-1][-3:]
@@ -85,6 +81,8 @@ class BaseAgent(SimSparkServer):
                         break
                 break
 
+        # Debug
+        # print('(_parse_preceptors) message -> ', raw_preceptors)
         # for s in self.state:
         #     print("(_parse_preceptors)", s, self.state[s])
         # if self.is_fallen():
@@ -94,7 +92,6 @@ class BaseAgent(SimSparkServer):
 
     def initialize(self):
         """Creates player model, and registers on a team"""
-        # TODO(LOGGING) Log initializing agent on server
         self.connect()
         self.send_message(ef.create(filename=self.MODEL_PATH))
         self.send_message(ef.init(player_number=self.player_number,
@@ -119,7 +116,6 @@ class BaseAgent(SimSparkServer):
         self.synchronize()
         
         # Send entire message
-        # print(self.cycle_message)
         self.send_message(self.cycle_message)
         self.receive_message()
         
@@ -131,16 +127,18 @@ class BaseAgent(SimSparkServer):
         # Append sync message
         self.synchronize()
         self.send_message(self.cycle_message)
-        x = self._parse_preceptors(self.receive_message())
-        return x
+        return self._parse_preceptors(self.receive_message())
+
     def is_fallen(self):
+        # Check if robot is falling/fallen
         fallenUp = float(self.acc[0]) < -self.FALLEN_PARAM
         fallenDown = float(self.acc[0]) > self.FALLEN_PARAM
         fallenRight = float(self.acc[1]) < -self.FALLEN_PARAM
         fallenLeft = float(self.acc[1]) >  self.FALLEN_PARAM
-        return fallenUp or fallenDown or fallenRight or fallenLeft
+        return fallenUp or fallenDown or fallenRight or fallenLeft or (self.pos[-1] < self.HEIGHT_LOWERBOUND)
     
     def filter_acc(self, acc):
+        # Modify accerleration to use previous values 
         for i in range(3):
             if math.fabs(acc[i]) > self.SPURIOUS_THRESHOLD:
                 acc[i] = 0

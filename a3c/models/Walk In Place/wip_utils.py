@@ -2,8 +2,8 @@ import re
 import numpy as np
 import json
 
-NUM_ACTIONS = 8
-SIMULATION_TIME = 3.6
+NUM_ACTIONS = 14
+SIMULATION_TIME = 5.8
 #Tuned Constants
 DEFAULT_ACC_MIN = np.array([-10,-10,-10])
 DEFAULT_ACC_RANGE = np.array([5,5,5])
@@ -49,14 +49,16 @@ def map_action(action, action_keys):
 
 def demap_state(state, acc, gyr, pos, orr, velocities, target, rel_time, action_keys):
     tmp = [state[s]for s in action_keys]
-    tmp += list(velocities)
     # tmp += list(target)
+    tmp += list(velocities)
     tmp += list(acc)
     tmp += list(gyr)
     tmp += list([pos])
     # tmp += [orr]
     tmp += list([rel_time])
-    return (np.array(tmp) - DEFAULT_STATE_MIN)/ DEFAULT_STATE_RANGE         
+    x = (np.array(tmp) - DEFAULT_STATE_MIN)/ DEFAULT_STATE_RANGE         
+    return x         
+    # return np.array(tmp)         
 
 def get_joint_specs(constrains_path, specs_path):
     with open(constrains_path, 'r') as f:

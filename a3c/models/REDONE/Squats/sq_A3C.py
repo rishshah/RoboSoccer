@@ -18,19 +18,19 @@ os.environ["OMP_NUM_THREADS"] = "4"
 GAMMA = 1
 MAX_EP = 30000
 MAX_EP_STEP = 200
-LEARNING_RATE = 0.00005
-NUM_WORKERS = 5
+LEARNING_RATE = 0.0001
+NUM_WORKERS = 4
 
 # Model IO Parameters
 MODEL_NAME = "squats"
-LOAD_MODEL = False
-TEST_MODEL = False
+LOAD_MODEL = True
+TEST_MODEL = True
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 120
-Z2 = 120
+Z1 = 100
+Z2 = 100
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -63,7 +63,7 @@ class Net(nn.Module):
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        if(t % 20 == 0):
+        if(t % 40 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
         if t == -1:
@@ -120,7 +120,7 @@ class Worker(mp.Process):
                     #     a = self.lnet.choose_action(torch.from_numpy(s).float().cuda(), t)
                     # else:
                     #     a = self.lnet.choose_action(v_wrap(s[:]), t)
-                    s_, r, done, _ = self.env.step(a)
+                    s_, r, done, _ = self.env.step(a, self.g_ep.value)
 
                     if t == MAX_EP_STEP - 1:
                         done = True

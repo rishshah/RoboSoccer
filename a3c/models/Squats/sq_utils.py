@@ -2,8 +2,8 @@ import re
 import numpy as np
 import json
 
-NUM_ACTIONS = 18
-SIMULATION_TIME = 5.6
+NUM_ACTIONS = 8
+SIMULATION_TIME = 3.6
 #Tuned Constants
 DEFAULT_ACC_MIN = np.array([-10,-10,-10])
 DEFAULT_ACC_RANGE = np.array([5,5,5])
@@ -14,8 +14,8 @@ DEFAULT_GYR_RANGE = np.array([50,50])
 DEFAULT_POS_MIN = np.array([0.05])
 DEFAULT_POS_RANGE = np.array([0.15])
 
-DEFAULT_ACT_MIN = np.ones(NUM_ACTIONS) * -70
-DEFAULT_ACT_RANGE = np.ones(NUM_ACTIONS) * 50
+DEFAULT_ACT_MIN = np.ones(NUM_ACTIONS) * -50
+DEFAULT_ACT_RANGE = np.ones(NUM_ACTIONS) * 30
 
 DEFAULT_VEL_MIN = np.ones(NUM_ACTIONS) * -7
 DEFAULT_VEL_RANGE = np.ones(NUM_ACTIONS) * 3.5

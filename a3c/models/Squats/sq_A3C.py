@@ -1,43 +1,36 @@
-import sys
-import torch
+import sys, math, os, torch
+import numpy as np
 import torch.nn as nn
-from utils import v_wrap, set_init, push_and_pull, record
 import torch.nn.functional as F
 import torch.multiprocessing as mp
-from shared_adam import SharedAdam
-import gym
-import math, os
 import matplotlib.pyplot as plt
+from shared_adam import SharedAdam
+from copy import deepcopy
+from utils import *
 
 sys.path.append('../')
 sys.path.append('../Environment')
 from Environment.environment import Environment
 
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "4"
 
 # Training Hyperparameters
-UPDATE_GLOBAL_ITER = 50
-GAMMA = 0.99
-MAX_EP = 15000
+GAMMA = 1
+MAX_EP = 30000
 MAX_EP_STEP = 200
-LEARNING_RATE = 0.0003
-NUM_WORKERS = 4#mp.cpu_count()
+LEARNING_RATE = 0.0001
+NUM_WORKERS = 4
 
 # Model IO Parameters
-MODEL_NAME = "hw_partial_net"
+MODEL_NAME = "squats"
 LOAD_MODEL = True
 TEST_MODEL = True
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 200
+Z1 = 100
 Z2 = 100
-MU_SPAN = 1
-
-#Global Param
-agent_port = 3300
-monitor_port = 3400
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -48,29 +41,33 @@ class Net(nn.Module):
         self.s_dim = s_dim
         self.a_dim = a_dim
         self.a1 = nn.Linear(s_dim, Z1)
-        self.mu = nn.Linear(Z1, a_dim)
-        self.sigma = nn.Linear(Z1, a_dim)
-        self.c1 = nn.Linear(s_dim, Z2)
+        self.a2 = nn.Linear(Z1, Z2)
+        self.mu = nn.Linear(Z2, a_dim)
+        self.sigma = nn.Linear(Z2, a_dim)
+        self.c1 = nn.Linear(s_dim, Z1)
+        self.c2 = nn.Linear(Z1, Z2)
         self.v = nn.Linear(Z2, 1)
-        set_init([self.a1, self.mu, self.sigma, self.c1, self.v])
+        set_init([self.a1, self.a2, self.mu, self.sigma, self.c1, self.c2, self.v])
         self.distribution = torch.distributions.Normal
 
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
-        mu = MU_SPAN * torch.tanh(self.mu(a1))
-        sigma = F.softplus(self.sigma(a1))
+        a2 = F.relu6(self.a2(a1))
+        mu = 2 * torch.tanh(self.mu(a2))
+        sigma = F.softplus(self.sigma(a2)) + 0.001
         c1 = F.relu6(self.c1(x))
-        values = self.v(c1)
+        c2 = F.relu6(self.c2(c1))
+        values = self.v(c2)
         return mu, sigma, values
 
     def choose_action(self, s, t=0):
         self.training = False
         mu, sigma, _ = self.forward(s)
-        if(t % 20 == 0):
+        if(t % 40 == 0):
             print(mu[0][0], sigma[0][0])
         m = self.distribution(mu.view(self.a_dim, ).data, sigma.view(self.a_dim, ).data)
-        # if t == -1:
-        #     return mu.detach().numpy()
+        if t == -1:
+            return mu.detach().numpy()
         return m.sample().numpy()
 
     def loss_func(self, s, a, v_t):
@@ -114,13 +111,16 @@ class Worker(mp.Process):
                 if self.g_ep.value % 20 == 19:
                     torch.save(self.gnet, MODEL_NAME + ".pt")
 
+                if self.g_ep.value % 2000 == 19:
+                    torch.save(self.gnet, MODEL_NAME + "_" + str(self.g_ep.value//2000) + ".pt")
+
                 for t in range(MAX_EP_STEP):
                     a = self.lnet.choose_action(v_wrap(s[None, :]), t)
                     # if is_gpu_available:
                     #     a = self.lnet.choose_action(torch.from_numpy(s).float().cuda(), t)
                     # else:
                     #     a = self.lnet.choose_action(v_wrap(s[:]), t)
-                    s_, r, done, _ = self.env.step(a)
+                    s_, r, done, _ = self.env.step(a, self.g_ep.value)
 
                     if t == MAX_EP_STEP - 1:
                         done = True
@@ -148,10 +148,11 @@ def test():
     try:
         gnet = torch.load(MODEL_NAME + ".pt")
         s = ENV_DUMMY.reset()
+        s_ = deepcopy(s)
         for t in range(MAX_EP_STEP):
             s, _, done, _ = ENV_DUMMY.step(gnet.choose_action(v_wrap(s[:]), -1))  
-            if done: 
-                break  
+            if done:
+                s = deepcopy(s_)
         ENV_DUMMY.cleanup()
     
     except(KeyboardInterrupt): 
@@ -178,6 +179,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
+    agent_port = 3100
+    monitor_port = 3200
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     
@@ -197,21 +200,3 @@ if __name__ == "__main__":
     plt.ylabel('Moving average ep reward')
     plt.xlabel('Episodes')
     plt.savefig(MODEL_NAME + "_lc.png")
-
-
-# def printgradnorm(self, grad_input, grad_output):
-#     print('Inside ' + self.__class__.__name__ + ' backward')
-#     print('Inside class:' + self.__class__.__name__)
-#     print('')
-#     # print('grad_input: ', type(grad_input))
-#     # print('grad_input[0]: ', type(grad_input[0]))
-#     # print('grad_output: ', type(grad_output))
-#     # print('grad_output[0]: ', type(grad_output[0]))
-#     print('')
-#     print('grad_input size:', grad_input[0].size())
-#     print('grad_output size:', grad_output[0].size())
-#     print('grad_input:', grad_input)
-#     print('$$$$\n\n\n')
-#     print('grad_input norm:', grad_input[0].norm()) 
-#     print('grad_output norm:', grad_output[0].norm())
-# self.c2.register_backward_hook(printgradnorm)

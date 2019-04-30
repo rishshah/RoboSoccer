@@ -70,40 +70,40 @@ class MotionClip(object):
         if target_pose is not None:
             ret = self.get_pose(time + self.mocap.frame_time)
             for joint in ret:
-                if joint in [
-                    "he2",
-                    "lae1",
-                    "lle3",
-                    "lle4",
-                    "lle5",
-                    "rae1",
-                    "rle3",
-                    "rle4",
-                    "rle5",
-                ]:
-                    ret[joint] *= -1
+            #     if joint in [
+            #         "he2",
+            #         "lae1",
+            #         "lle3",
+            #         "lle4",
+            #         "lle5",
+            #         "rae1",
+            #         "rle3",
+            #         "rle4",
+            #         "rle5",
+            #     ]:
+            #         ret[joint] *= -1
                 ret[joint] = np.clip(ret[joint], clip_limits[joint][0], clip_limits[joint][1])
             
-                # if joint in blacklist:
-                #     ret[joint] = 0
+            #     if joint in blacklist:
+            #         ret[joint] = 0
             return ret, self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):
         ans = 0
         for x in b.keys():
             if x in keys:
-                if x in [
-                    "he2",
-                    "lae1",
-                    "lle3",
-                    "lle4",
-                    "lle5",
-                    "rae1",
-                    "rle3",
-                    "rle4",
-                    "rle5",
-                ]:
-                    b[x] *= -1
+                # if x in [
+                #     "he2",
+                #     "lae1",
+                #     "lle3",
+                #     "lle4",
+                #     "lle5",
+                #     "rae1",
+                #     "rle3",
+                #     "rle4",
+                #     "rle5",
+                # ]:
+                #     b[x] *= -1
                 b[x] = np.clip(b[x], clip_limits[x][0], clip_limits[x][1])
                 # print("(Diff) ", x, a[x], b[x])
                 ans += (a[x] - b[x])*(a[x] - b[x])

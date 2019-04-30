@@ -18,11 +18,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.2
+    SIMULATION_TIME = 3.6
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wip.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
+    MOTION_CLIP = CWD + "/imitation/mocap/squats.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
 
@@ -41,10 +41,10 @@ class Environment(object):
         # "lae1", "rae1",
 
         # Squats INP
-        # "lle2", "rle2",
-        # "lle5", "rle5",
-        # "lle4", "rle4",
-        # "lle3", "rle3",
+        "lle2", "rle2",
+        "lle5", "rle5",
+        "lle4", "rle4",
+        "lle3", "rle3",
 
         # UpperBody DONE
         # "he1" , "he2",
@@ -65,8 +65,8 @@ class Environment(object):
         # "lae4", "rae4",
 
         # WIP PARTIAL
-        "lle1","lle2","lle3","lle4","lle5","lle6",
-        "rle1","rle2","rle3","rle4","rle5","rle6",
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "lle1","rle2","rle3","rle4","rle5","rle6",
     ]
 
     #Server Restart Parameter
@@ -131,7 +131,7 @@ class Environment(object):
 
         pos = max(pos, 0.01)
         if pos > self.HEIGHT_THRESHOLD:
-            pos_reward = 0.1 * np.exp(self.HEIGHT * (1/pos))
+            pos_reward = 0.3 * np.exp(self.HEIGHT * (1/pos))
         
         if(t != None and t % 30 == 0):
             print("(generate_reward) {} \t (cpy, [{},{}]), (acc, {})\t (gyr, [{},{}]), \t (pos, [{},{}])".format(
@@ -155,7 +155,7 @@ class Environment(object):
         for i in range(num_steps):      
             s, r, done, time = self.step(diff/max_steps)
             self.init_time = time 
-            # print(i, "INIT_R", r, done)
+            print(i, "INIT_R", r, done)
         return s
     
     def reset(self):

@@ -74,7 +74,7 @@ class Environment(object):
     MAX_COUNT = 50
 
     #Reward Hyperparams
-    COPY = -0.008/len(ACTION_KEYS)
+    COPY = -0.005/len(ACTION_KEYS)
     # FALLEN = 0.5
     HEIGHT = -0.1
     HEIGHT_THRESHOLD = 0.5 
@@ -131,7 +131,7 @@ class Environment(object):
 
         pos = max(pos, 0.01)
         if pos > self.HEIGHT_THRESHOLD:
-            pos_reward = 0.1 * np.exp(self.HEIGHT * (1/pos))
+            pos_reward = 0.3 * np.exp(self.HEIGHT * (1/pos))
         
         if(t != None and t % 30 == 0):
             print("(generate_reward) {} \t (cpy, [{},{}]), (acc, {})\t (gyr, [{},{}]), \t (pos, [{},{}])".format(

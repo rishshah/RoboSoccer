@@ -22,15 +22,15 @@ LEARNING_RATE = 0.0001
 NUM_WORKERS = 4
 
 # Model IO Parameters
-MODEL_NAME = "wip_try2"
-LOAD_MODEL = True
+MODEL_NAME = "wave"
+LOAD_MODEL = False
 TEST_MODEL = False
 
 # Neural Network Architecture Variables
 ENV_DUMMY = Environment()
 N_S, N_A = ENV_DUMMY.state_dim, ENV_DUMMY.action_dim
-Z1 = 150
-Z2 = 150
+Z2 = 100
+Z1 = 100
 
 # Gpu use flag
 # is_gpu_available = torch.cuda.is_available()
@@ -53,7 +53,7 @@ class Net(nn.Module):
     def forward(self, x):
         a1 = F.relu6(self.a1(x))
         a2 = F.relu6(self.a2(a1))
-        mu = 3 * torch.tanh(self.mu(a2))
+        mu = 5 * torch.tanh(self.mu(a2))
         sigma = F.softplus(self.sigma(a2)) + 0.001
         c1 = F.relu6(self.c1(x))
         c2 = F.relu6(self.c2(c1))
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # Parallel training
-    agent_port = 4100
-    monitor_port = 4200
+    agent_port = 6100
+    monitor_port = 6200
     workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i, agent_port + i, monitor_port + i) for i in range(NUM_WORKERS)]
     [w.start() for w in workers]
     

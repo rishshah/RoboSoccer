@@ -2,8 +2,8 @@ import re
 import numpy as np
 import json
 
-NUM_ACTIONS = 12
-SIMULATION_TIME = 5.8
+NUM_ACTIONS = 7
+SIMULATION_TIME = 3
 #Tuned Constants
 DEFAULT_ACC_MIN = np.array([-10,-10,-10])
 DEFAULT_ACC_RANGE = np.array([5,5,5])

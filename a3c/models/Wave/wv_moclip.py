@@ -84,8 +84,8 @@ class MotionClip(object):
                     ret[joint] *= -1
                 ret[joint] = np.clip(ret[joint], clip_limits[joint][0], clip_limits[joint][1])
             
-                # if joint in blacklist:
-                #     ret[joint] = 0
+            #     if joint in blacklist:
+            #         ret[joint] = 0
             return ret, self.euclead_distance(actual_pose, target_pose, keys)
 
     def euclead_distance(self, a, b, keys):

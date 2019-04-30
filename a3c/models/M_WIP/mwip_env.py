@@ -18,11 +18,11 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.2
+    SIMULATION_TIME = 3
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wip.bvh"
-    CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
+    MOTION_CLIP = CWD + "/imitation/mocap/manual_wip.bvh"
+    CONSTRAINTS = CWD + "/imitation/constraints/constraints_1.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
 
@@ -37,19 +37,14 @@ class Environment(object):
 
     # Action params
     ACTION_KEYS = [
-        # Hands Opposite DONE
+        # Hands Opposite
         # "lae1", "rae1",
 
-        # Squats INP
+        # Squats
         # "lle2", "rle2",
         # "lle5", "rle5",
         # "lle4", "rle4",
         # "lle3", "rle3",
-
-        # UpperBody DONE
-        # "he1" , "he2",
-        # "lae1", "lae2", "lae3", "lae4",
-        # "rae1", "rae2", "rae3", "rae4",
         
         # Stand
         # "lle1", "lle2", "lle3", "lle4", "lle5", "lle6",
@@ -64,9 +59,15 @@ class Environment(object):
         # "lae3", "rae3",
         # "lae4", "rae4",
 
-        # WIP PARTIAL
-        "lle1","lle2","lle3","lle4","lle5","lle6",
-        "rle1","rle2","rle3","rle4","rle5","rle6",
+        # WIP
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "rle1","rle2","rle3","rle4","rle5","rle6",
+    
+        # Kick
+        "rae1",
+        "lle2","lle6",
+        "rle2","rle3","rle4","rle6",
+    
     ]
 
     #Server Restart Parameter
@@ -74,7 +75,7 @@ class Environment(object):
     MAX_COUNT = 50
 
     #Reward Hyperparams
-    COPY = -0.008/len(ACTION_KEYS)
+    COPY = -0.007/len(ACTION_KEYS)
     # FALLEN = 0.5
     HEIGHT = -0.1
     HEIGHT_THRESHOLD = 0.5 
@@ -131,7 +132,7 @@ class Environment(object):
 
         pos = max(pos, 0.01)
         if pos > self.HEIGHT_THRESHOLD:
-            pos_reward = 0.1 * np.exp(self.HEIGHT * (1/pos))
+            pos_reward = 0.3 * np.exp(self.HEIGHT * (1/pos))
         
         if(t != None and t % 30 == 0):
             print("(generate_reward) {} \t (cpy, [{},{}]), (acc, {})\t (gyr, [{},{}]), \t (pos, [{},{}])".format(
@@ -139,10 +140,11 @@ class Environment(object):
 
         if is_fallen:
             # fallen_reward = np.exp(self.FALLEN * self.SIMULATION_TIME/time)
-            print('(generate_reward) fallen ', time)
+            print('(generate_reward) fallen ', time, acc, pos)
 
         reward = copy_reward + gyr_reward + pos_reward + fallen_reward
-        return np.array([target[s] for s in self.ACTION_KEYS]), reward
+        return np.zeros(len(self.ACTION_KEYS)), reward
+        # return np.array([target[s] for s in self.ACTION_KEYS]), reward
 
     def set_init_pose(self, max_steps, num_steps):
         conversion_factor = 180/np.pi
@@ -156,6 +158,7 @@ class Environment(object):
             s, r, done, time = self.step(diff/max_steps)
             self.init_time = time 
             # print(i, "INIT_R", r, done)
+        self.motion = []
         return s
     
     def reset(self):
@@ -186,8 +189,8 @@ class Environment(object):
             s, _, _, time = self.step(self.DEFAULT_ACTION)
             self.init_time = time 
         
-        # return self.set_init_pose(60, 30)
-        return s
+        return self.set_init_pose(50, 50)
+        # return s
         
     def cleanup(self):
         self.agent.disconnect()
@@ -260,6 +263,36 @@ def simulate_fall():
         env.step(action)
     env.cleanup()
 
+def simulate_kick():
+    env = Environment()
+    env.reset()
+    action = env.DEFAULT_ACTION
+    action[1] = -1.63
+    action[7] = 0.1
+    action[3] = -action[7]
+    action[13] = action[7]
+    action[9] = -action[7]
+    for i in range(1,50):
+        env.step(action)
+
+    action[10] = 1.3
+    action[11] = -1.5
+    action[1] = 0
+    for i in range(1,40):
+        env.step(action)
+
+    action[10] *= -1 
+    action[11] *= -1
+    action[7] = -0.15
+    action[3] = -action[7]
+    action[13] = action[7]
+    action[9] = -action[7]
+    for i in range(1,40):
+        env.step(action)        
+
+    # save_motion("./imitation/mocap/manual_wip.bvh", env.motion, env.FRAME_TIME)    
+    env.cleanup()    
+
 def simulate_given():
     env = Environment()
     s = env.reset()
@@ -278,4 +311,4 @@ def simulate_given():
     env.cleanup()    
 
 if __name__ == "__main__":
-    simulate_given()
+    simulate_kick()

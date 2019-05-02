@@ -18,10 +18,10 @@ class Environment(object):
     # Global Server Constants
     TEAM = "UTAustinVilla_Base"
     U_NUM = 1
-    SIMULATION_TIME = 3.2
+    SIMULATION_TIME = 1.9
 
     # Motion Clip Params
-    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wip.bvh"
+    MOTION_CLIP = CWD + "/imitation/mocap/retarget_wave.bvh"
     CONSTRAINTS = CWD + "/imitation/constraints/constraints_2.txt"
     SPECS = CWD + "/imitation/constraints/joint_specifications.json"
     FRAME_TIME = 0.04
@@ -37,19 +37,14 @@ class Environment(object):
 
     # Action params
     ACTION_KEYS = [
-        # Hands Opposite DONE
+        # Hands Opposite
         # "lae1", "rae1",
 
-        # Squats INP
+        # Squats
         # "lle2", "rle2",
         # "lle5", "rle5",
         # "lle4", "rle4",
         # "lle3", "rle3",
-
-        # UpperBody DONE
-        # "he1" , "he2",
-        # "lae1", "lae2", "lae3", "lae4",
-        # "rae1", "rae2", "rae3", "rae4",
         
         # Stand
         # "lle1", "lle2", "lle3", "lle4", "lle5", "lle6",
@@ -59,14 +54,14 @@ class Environment(object):
         # "rae1", "rae2", "rae3", "rae4",
 
         # Wave
-        # "lae1", "rae1",
-        # "lae2", "rae2",
-        # "lae3", "rae3",
-        # "lae4", "rae4",
+        "lae1", "rae1",
+        "lae2", "rae2",
+        "lae3", "rae3",
+        "lae4", "rae4",
 
-        # WIP PARTIAL
-        "lle1","lle2","lle3","lle4","lle5","lle6",
-        "rle1","rle2","rle3","rle4","rle5","rle6",
+        # WIP
+        # "lle1","lle2","lle3","lle4","lle5","lle6",
+        # "lle1","rle2","rle3","rle4","rle5","rle6",
     ]
 
     #Server Restart Parameter
@@ -74,7 +69,7 @@ class Environment(object):
     MAX_COUNT = 50
 
     #Reward Hyperparams
-    COPY = -0.008/len(ACTION_KEYS)
+    COPY = -0.007/len(ACTION_KEYS)
     # FALLEN = 0.5
     HEIGHT = -0.1
     HEIGHT_THRESHOLD = 0.5 
@@ -131,7 +126,7 @@ class Environment(object):
 
         pos = max(pos, 0.01)
         if pos > self.HEIGHT_THRESHOLD:
-            pos_reward = 0.1 * np.exp(self.HEIGHT * (1/pos))
+            pos_reward = 0.3 * np.exp(self.HEIGHT * (1/pos))
         
         if(t != None and t % 30 == 0):
             print("(generate_reward) {} \t (cpy, [{},{}]), (acc, {})\t (gyr, [{},{}]), \t (pos, [{},{}])".format(
@@ -186,8 +181,8 @@ class Environment(object):
             s, _, _, time = self.step(self.DEFAULT_ACTION)
             self.init_time = time 
         
-        # return self.set_init_pose(60, 30)
-        return s
+        return self.set_init_pose(50, 50)
+        # return s
         
     def cleanup(self):
         self.agent.disconnect()

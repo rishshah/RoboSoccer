@@ -136,6 +136,7 @@
 \setlength{\oddsidemargin}{30mm}  
 \setlength{\evensidemargin}{30mm} 
 \fi
+
 % total width for two side: 160+30+20=210 mm
 
 %******************notations with nomecl***************************

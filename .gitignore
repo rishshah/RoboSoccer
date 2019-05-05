@@ -16,6 +16,7 @@ __pycache__/
 *.lot
 *.lof
 *.nlo
+*.out
 
 #Library Path
 Environment/server/ld_library_path/ld_library_path

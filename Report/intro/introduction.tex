@@ -10,16 +10,28 @@ For good rewards, we need motion clips to be based on our robot hierarchy. A ske
 \begin{figure}
 \centering
   \includegraphics[width=\linewidth]{images/3DRoboCup.jpg}
-  \caption{3DRoboCup Simulation with two teams of Red and Blue Nao Agents}
+  \caption{3D RoboCup Simulation with two teams of Red and Blue Nao Agents}
   \label{fig:robocup}
 \end{figure}
 
-\\\\
 \section{Problem statement}
 Under the standard rules of RoboCup Competition \cite{usermanual}, and physical forces like, friction, gravity and others we need to train a standard Nao agent to walk (and perform other basic skills later) smoothly without falling. This process has to be accomplished via training the soccer bots using human motion clips so that the resultant walk is more natural. This requires agent learning to provide a right set of torques to appropriate joints at right time in the simulation. 
 
+\section{Source Code}
+This report along with all the code for this project can be found in \href{https://github.com/rishshah/RoboSoccer}{\underline{this}} Github Link. We have also added a requirements file that contains all the necessary commands needed to setup this project as well as install its dependencies.
+
+
+\newpage
+
+\begin{figure}
+\centering
+  \includegraphics[width=\linewidth]{images/3DRoboCup2.jpg}
+  \caption{Real life 3D RoboCup competition between two teams of Red and Blue Nao Agents}
+  \label{fig:robocup2}
+\end{figure}
+
 \section {Work Partition}
-In part 1 of this project, we designed the general framework for training, getting rewards, runnning simulations that essentially enabled us to do testing and experimentation in part 2. The retargeting problem as well as other major server flaws were debugged in part 2.
-  
+In part 1 of this project, we had designed the general framework for training, getting rewards, running simulations that essentially enabled us to do testing and experimentation in part 2. The retargeting problem as well as other major server flaws were debugged in part 2. All the clips have been trained in this stage.
+
 \section{Report Outline}
 The rest of this report is organized as follows. In Chapter 2 we outline the existing literature related to our work. Chapter 3 describes the approaches we tried along with the challenges we faced. In Chapter 4 we provide an overview of our implementation framework. We present our results in Chapter 5 followed by conclusion and future extensions in Chapter 6.

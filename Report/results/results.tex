@@ -6,7 +6,7 @@ In the retargeting phase,  we have successfully transformed two motion clips tha
 \begin{figure}[!b]
   \centering
   \href{https://youtu.be/UpT7YPi6Ekc}{\includegraphics[width=1\linewidth, height=10cm]{images/retarget_wave.png}}
-  \caption{Retargeted motion clip for skill of waving}
+  \caption{Retargeted motion clip for hand wave skill}
   \label{fig:retarget_wave}
 \end{figure}
 \begin{figure} 
@@ -16,7 +16,25 @@ In the retargeting phase,  we have successfully transformed two motion clips tha
   \label{fig:retarget_wip}
 \end{figure}
 \section{Training without Retargeting}
-In the Training phase, initially to test the results of both phases independently we had manually created some motion clips which were free from retargeting errors. These include motion clips like hands opposite motion (in Fig \ref{fig:ho}), periodic squats motion (in Fig \ref{fig:squats}), manual partial walk in place motion (in Fig \ref{fig:mwip}). As you can see from these videos, that the robot is mimicking the motion to quite a good extent and further training will only improve these skills. All these skills have been trained using A3C code for around 50-60k episodes each using same reward function but with different state and action space. This space has been limited to only those joints that are changed in the motion clips (instead of all of the original 22 joints). 
+In the Training phase, initially to test the results of both phases independently we had manually created some motion clips which were free from retargeting errors. These include motion clips like hands opposite motion (in Fig \ref{fig:ho}), periodic squats motion (in Fig \ref{fig:squats}), manual partial walk in place motion (in Fig \ref{fig:mwip}). As you can see from these videos, that the robot is mimicking the motion to quite a good extent and further training will only improve these skills. All these skills have been trained using A3C code for around 50-60k episodes each using same reward function but with different state and action space. This space has been limited to only those joints whose orientation has non zero change involved in the motion clips (instead of all the original 22 joints). 
+
+\section{Learning Curve}
+Since 60k episodes take almost an entire day to learn, we implemented a mechanism to pause the learning process. This is done by saving current weights (as well as at some intermediate points) and then loading them to pick up where we left off. This not only helped us save the partially trained model in presence of runtime bugs but also helped us resume from particular checkpoints which were not corrupted. In the Fig \ref{fig:lc1}, we can see that in first 30k episodes, the learning curve (moving average of cumulative rewards v/s episodes) increased very slowly for almost 5k episodes and then picked up the pace to reach the maximum achievable value (which in this case was 120). In the Fig \ref{fig:lc2}, we can observe that in next 30k episodes, the growth in learning curve is slow as expected. Also, many times the moving average suddenly drops and grows fast again. Such events are marked by frequent spikes in both learning curves. This might be because of the agent trying out newer approaches/trajectories to see if there is any possibility of better cumulative rewards.
+
+\begin{figure}[!b] 
+  \centering
+  \subfloat[Hands Opposite motion clip 1 - 30k episodes]{
+    \includegraphics[width=1\linewidth, height=9.2cm]{images/lc_1.png}
+    \label{fig:lc1}
+  }
+  \qquad
+  \subfloat[Squats motion clip 30k -60k episodes]{
+    \includegraphics[width=1\linewidth, height=9.2cm]{images/lc_2.png}
+    \label{fig:lc2}
+  }
+  \label{fig:x2}  
+  \caption{Learning Curve for various motion clips in different stages}
+\end{figure}
 
 \begin{figure}[!ht]
     \centering

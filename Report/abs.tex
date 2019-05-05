@@ -1,0 +1,9 @@
+%============================= abs.tex================================
+\begin{Abstract}
+\\\\
+The research on soccer robot has seen rapid development in recent years. RoboSoccer is focused on training robots to play soccer at a level comparable or even better than humans in the near future. Currently, even the basic skills like balancing, walking and kicking are learned based on mechanical models that need further optimization of skill-specific parameters. Through this project, we explore a generalized method to teach soccer robots these basic skills. Reinforcement Learning's(RL) applications in robotics are of great interest because of their wide applicability. We show that RL can be leveraged to learn some simple skills.  We formulate this problem as RL task where the robot takes actions by adjusting torques to appropriate joints. The rewards experienced are based on pose similarity to motion clips (designed to enact the same skill). Such motion clips provide a model for the robot to follow. The robot then learns to mimic the motion clip while simultaneously trying to balance itself in the simulated world. This is done in two phases namely Retargeting and Training. In Retargeting phase, we try to transfer "motion" from existing motion clips to our RL agent's joint hierarchy. In the Training phase, we train our agent using the data obtained from the retargeted motion clip with the help of a standard RL policy gradient method known as Asynchronous Advantage Actor-Critic (A3C). With extensive testing and tuning, we have been able to successfully train our agent some very primitive skills (both periodic and non-periodic) like hand waves, squats and walking in place. 
+\\\\
+This report explains the approach taken towards solving this task and the challenges faced in doing so. 
+\end{Abstract}
+%=======================================================================
+

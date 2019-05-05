@@ -5,6 +5,18 @@ __pycache__/
 
 #Neural nets
 *.pt
+
+#Latex
+*.aux
+*.toc
+*.bst
+*.blg
+*.bbl
+*.log
+*.lot
+*.lof
+*.nlo
+
 #Library Path
 Environment/server/ld_library_path/ld_library_path
 
